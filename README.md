@@ -1,4 +1,4 @@
-<<<<<<< HEAD
+
 <p align="center">
   <a href="http://nestjs.com/" target="blank"><img src="https://nestjs.com/img/logo-small.svg" width="200" alt="Nest Logo" /></a>
 </p>
@@ -75,4 +75,4 @@ Nest is [MIT licensed](LICENSE).
 =======
 # axel-services-backend
 Axel Services Backend
->>>>>>> 39e9db4e5933f4fc811924dade41337663304186
+
