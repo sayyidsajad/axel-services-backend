@@ -1,11 +1,5 @@
 /* eslint-disable @typescript-eslint/no-unused-vars */
-import {
-  BadRequestException,
-  Inject,
-  Injectable,
-  Res,
-  UploadedFile,
-} from '@nestjs/common';
+import { Inject, Injectable, Res, UploadedFile } from '@nestjs/common';
 import {
   CreateServicerDto,
   servicerProcedures,
@@ -20,6 +14,7 @@ import * as otpGenerator from 'otp-generator';
 import { MailerService } from '@nestjs-modules/mailer';
 import { CloudinaryService } from 'src/cloudinary/cloudinary.service';
 import * as dotenv from 'dotenv';
+import { ConfigService } from '@nestjs/config';
 dotenv.config();
 
 @Injectable()
@@ -29,9 +24,14 @@ export class ServicerService {
     private servicerModel: Model<Servicer>,
     @Inject('CATEGORY_MODEL')
     private categoryModel: Model<any>,
+    @Inject('BOOKING_MODEL')
+    private bookingModel: Model<any>,
+    @Inject('USER_MODEL')
+    private userModel: Model<any>,
     private jwtService: JwtService,
     private readonly mailerService: MailerService,
     private cloudinary: CloudinaryService,
+    private configService: ConfigService,
   ) {}
   async servicerRegister(
     createServicerDto: CreateServicerDto,
@@ -40,9 +40,28 @@ export class ServicerService {
     try {
       const { companyName, email, password, confirmPassword, phone } =
         createServicerDto;
+      const adminEmail = this.configService.get<string>('ADMIN_EMAIL');
       const createdServicer = await this.servicerModel.findOne({
         email: email,
       });
+      const createdUser = await this.userModel.findOne({ email: email });
+      if (adminEmail === email) {
+        return res
+          .status(400)
+          .json({ message: 'Admin cannot be logged in as a servicer' });
+      } else if (createdUser?.['email'] === email) {
+        return res
+          .status(400)
+          .json({ message: 'Email has been already used by an user' });
+      } else if (createdUser?.['phone'] === phone) {
+        return res
+          .status(400)
+          .json({ message: 'Phone has been already by a servicer' });
+      } else if (createdServicer?.['phone'] === phone) {
+        return res
+          .status(400)
+          .json({ message: 'Phone has been already registered' });
+      }
       if (!createdServicer) {
         const salt = await bcrypt.genSalt(10);
         const hashedPassword = await bcrypt.hash(password, salt);
@@ -67,6 +86,8 @@ export class ServicerService {
           .json({ message: 'Email has been already registered' });
       }
     } catch (error) {
+      console.log(error);
+
       return res.status(500).json({ message: 'Internal Server Error' });
     }
   }
@@ -104,7 +125,7 @@ export class ServicerService {
     servicerProcedures: servicerProcedures,
     @Res() res: Response,
     @UploadedFile() file: Express.Multer.File,
-    id: number,
+    id: string,
   ) {
     try {
       const { serviceName, description, amount, category } = servicerProcedures;
@@ -139,7 +160,22 @@ export class ServicerService {
   }
   async servicerDashboard(@Res() res: Response) {
     try {
-      const servicesFind = await this.servicerModel.find();
+      const servicesFind = await this.servicerModel.aggregate([
+        {
+          $lookup: {
+            from: 'categories',
+            localField: 'category',
+            foreignField: '_id',
+            as: 'categoryInfo',
+          },
+        },
+        {
+          $unwind: {
+            path: '$categoryInfo',
+            preserveNullAndEmptyArrays: true,
+          },
+        },
+      ]);
       return res.status(200).json({ servicesFind });
     } catch (error) {
       return res.status(500).json({ message: 'Internal Server Error' });
@@ -155,10 +191,7 @@ export class ServicerService {
   }
   async servicersApproval(@Res() res: Response) {
     try {
-      const servicesFind = await this.servicerModel.find(
-        {},
-        { isApproved: false },
-      );
+      const servicesFind = await this.servicerModel.find({});
       return res
         .status(200)
         .json({ message: 'Success', approvals: servicesFind });
@@ -202,11 +235,16 @@ export class ServicerService {
   }
   async loadDashboard(@Res() res: Response, id: string) {
     try {
-      const findId = await this.servicerModel.updateOne(
+      await this.servicerModel.updateOne(
         { _id: id },
         { $set: { isVerified: true } },
       );
-      return res.status(200).json({ message: 'Success' });
+      const payload = { token: id };
+
+      return res.status(200).json({
+        access_token: await this.jwtService.sign(payload),
+        message: 'Success',
+      });
     } catch (error) {
       return res.status(500).json({ message: 'Internal Server Error' });
     }
@@ -217,6 +255,56 @@ export class ServicerService {
       return res
         .status(200)
         .json({ message: 'Success', categories: categories });
+    } catch (error) {
+      return res.status(500).json({ message: 'Internal Server Error' });
+    }
+  }
+  async listBookings(@Res() res: Response) {
+    try {
+      const listBookings = await this.bookingModel.aggregate([
+        {
+          $lookup: {
+            from: 'servicers',
+            localField: 'service',
+            foreignField: '_id',
+            as: 'services',
+          },
+        },
+        {
+          $unwind: {
+            path: '$services',
+          },
+        },
+      ]);
+      return res
+        .status(200)
+        .json({ message: 'Success', bookings: listBookings });
+    } catch (error) {
+      return res.status(500).json({ message: 'Internal Server Error' });
+    }
+  }
+  async approveBooking(@Res() res: Response, id: string) {
+    try {
+      const booked = await this.bookingModel.findById({ _id: id });
+      if (booked['approvalStatus'] === 'Pending') {
+        await this.bookingModel.updateOne(
+          { _id: id },
+          { $set: { approvalStatus: 'Approved' } },
+        );
+      } else {
+        await this.bookingModel.updateOne(
+          { _id: id },
+          { $set: { approvalStatus: 'Cancelled' } },
+        );
+      }
+      return res.status(201).json({ message: 'Success' });
+    } catch (error) {
+      return res.status(500).json({ message: 'Internal Server Error' });
+    }
+  }
+  async logOut(@Res() res: Response) {
+    try {
+      return res.status(200).json({ message: 'Success' });
     } catch (error) {
       return res.status(500).json({ message: 'Internal Server Error' });
     }

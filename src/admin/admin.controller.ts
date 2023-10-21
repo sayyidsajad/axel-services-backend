@@ -1,5 +1,5 @@
 /* eslint-disable @typescript-eslint/no-unused-vars */
-import { Controller, Post, Body, Res, Get } from '@nestjs/common';
+import { Controller, Post, Body, Res, Get, Patch } from '@nestjs/common';
 import { AdminService } from './admin.service';
 import { CreateAdminDto } from './dto/create-admin.dto';
 import { Response } from 'express';
@@ -63,7 +63,7 @@ export class AdminController {
     }
   }
   @Get('userMgt')
-  async userMgt(@Body() id: string, @Res() res: Response) {
+  async userMgt(@Res() res: Response) {
     try {
       return this.adminService.userMgt(res);
     } catch (error) {
@@ -124,6 +124,67 @@ export class AdminController {
         return res.status(500).json({ message: message });
       } else {
         return res.status(200).json({ message: message });
+      }
+    }
+  }
+  @Get('logOut')
+  async logOut(@Res() res: Response) {
+    try {
+      return this.adminService.logOut(res);
+    } catch (error) {
+      const { message } = error;
+      if (error.message === 'Internal Server Error') {
+        return res.status(500).json({ message: message });
+      } else {
+        return res.status(200).json({ message: message });
+      }
+    }
+  }
+  @Patch('listUnlist')
+  async listUnlist(@Res() res: Response, @Body('id') id: string) {
+    try {
+      return this.adminService.listUnlist(res, id);
+    } catch (error) {
+      const { message } = error;
+      if (error.message === 'Internal Server Error') {
+        return res.status(500).json({ message: message });
+      } else {
+        return res.status(201).json({ message: message });
+      }
+    }
+  }
+  @Get('servicersApproval')
+  async servicersApproval(@Res() res: Response) {
+    try {
+      return this.adminService.servicersApproval(res);
+    } catch (error) {
+      const { message } = error;
+      if (error.message === 'Internal Servor Error') {
+        return res.status(500).json({ message: message });
+      } else if (error.message === 'Email has been already registered') {
+        return res.status(400).json({ message: message });
+      } else {
+        return res.status(400).json({ message: message });
+      }
+    }
+  }
+  @Post('cancelBooking')
+  async scancelBooking(
+    @Res() res: Response,
+    @Body('textArea') textArea: string,
+    @Body('bookingId') bookingId: string,
+    @Body('userId') userId: string,
+  ) {
+    try {
+      return this.adminService.cancelBooking(res, textArea, bookingId, userId);
+    } catch (error) {
+      const { message } = error;
+      if (error.message === 'Internal Servor Error') {
+        return res.status(500).json({ message: message });
+      } else if (error.message === 'Email has been already registered') {
+        return res.status(400).json({ message: message });
+      } else {
+        return res.status(400).json({ message: message });
       }
     }
   }

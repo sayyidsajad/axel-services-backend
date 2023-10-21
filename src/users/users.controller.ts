@@ -1,5 +1,14 @@
 /* eslint-disable @typescript-eslint/no-unused-vars */
-import { Controller, Get, Post, Body, Res, Req, Query } from '@nestjs/common';
+import {
+  Controller,
+  Get,
+  Post,
+  Body,
+  Res,
+  Req,
+  Query,
+  Patch,
+} from '@nestjs/common';
 import { UsersService } from './users.service';
 import { CreateUserDto, loggedUserDto } from './dto/create-user.dto';
 import { Response } from 'express';
@@ -7,7 +16,6 @@ import { Response } from 'express';
 @Controller()
 export class UsersController {
   constructor(private readonly usersService: UsersService) {}
-
   @Post('signup')
   async userRegister(
     @Body() createUserDto: CreateUserDto,
@@ -17,16 +25,10 @@ export class UsersController {
       return this.usersService.userRegister(createUserDto, res);
     } catch (error) {
       const { message } = error;
-      if (error.message === 'Internal Server Error') {
+      if (res.status(500)) {
         return res.status(500).json({ message: message });
-      } else if (error.message === 'Token not available') {
+      } else {
         return res.status(400).json({ message: message });
-      } else if (error.message === 'Email has been already registered') {
-        return res.status(400).json({ message: message });
-      } else if (error.message === 'Phone has been already registered') {
-        return res.status(400).json({ message: message });
-      } else{
-        return res.status(200).json({ message: message });
       }
     }
   }
@@ -36,14 +38,10 @@ export class UsersController {
       return this.usersService.userLogin(user, res);
     } catch (error) {
       const { message } = error;
-      if (error.message === 'Internal Server Error') {
+      if (res.status(500)) {
         return res.status(500).json({ message: message });
-      } else if (error.message === 'Password is incorrect') {
-        return res.status(400).json({ message: message });
-      } else if (error.message === 'User has been blocked by admin') {
-        return res.status(400).json({ message: message });
       } else {
-        return res.status(200).json({ message: message });
+        return res.status(400).json({ message: message });
       }
     }
   }
@@ -53,12 +51,10 @@ export class UsersController {
       return this.usersService.sendMail(res, email);
     } catch (error) {
       const { message } = error;
-      if (error.message === 'Internal Server Error') {
+      if (res.status(500)) {
         return res.status(500).json({ message: message });
-      } else if (error.message === 'Invalid OTP') {
-        return res.status(400).json({ message: message });
       } else {
-        return res.status(200).json({ message: message });
+        return res.status(400).json({ message: message });
       }
     }
   }
@@ -68,23 +64,105 @@ export class UsersController {
       return this.usersService.loadHome(res);
     } catch (error) {
       const { message } = error;
-      if (error.message === 'Internal Server Error') {
+      if (res.status(500)) {
         return res.status(500).json({ message: message });
       } else {
-        return res.status(200).json({ message: message });
+        return res.status(400).json({ message: message });
+      }
+    }
+  }
+  @Get('logOut')
+  async logOut(@Res() res: Response) {
+    try {
+      return this.usersService.logOut(res);
+    } catch (error) {
+      const { message } = error;
+      if (res.status(500)) {
+        return res.status(500).json({ message: message });
+      } else {
+        return res.status(400).json({ message: message });
       }
     }
   }
   @Post('bookNow')
-  async bookNow(@Res() res: Response, @Body('id') id: string) {
+  async bookNow(
+    @Req() req: Request,
+    @Res() res: Response,
+    @Body('id') id: string,
+  ) {
     try {
-      return this.usersService.bookNow(res, id);
+      return this.usersService.bookNow(req, res, id);
     } catch (error) {
       const { message } = error;
-      if (error.message === 'Internal Server Error') {
+      if (res.status(500)) {
         return res.status(500).json({ message: message });
       } else {
-        return res.status(200).json({ message: message });
+        return res.status(400).json({ message: message });
+      }
+    }
+  }
+  @Get('bookingsList')
+  async bookingsList(@Res() res: Response) {
+    try {
+      return this.usersService.bookingsList(res);
+    } catch (error) {
+      const { message } = error;
+      if (res.status(500)) {
+        return res.status(500).json({ message: message });
+      } else {
+        return res.status(400).json({ message: message });
+      }
+    }
+  }
+  @Patch('cancelBooked')
+  async cancel(@Res() res: Response, @Body('id') id: string) {
+    try {
+      return this.usersService.cancel(res, id);
+    } catch (error) {
+      const { message } = error;
+      if (res.status(500)) {
+        return res.status(500).json({ message: message });
+      } else {
+        return res.status(400).json({ message: message });
+      }
+    }
+  }
+  @Get('servicerList')
+  async servicerList(@Res() res: Response) {
+    try {
+      return this.usersService.servicerList(res);
+    } catch (error) {
+      const { message } = error;
+      if (res.status(500)) {
+        return res.status(500).json({ message: message });
+      } else {
+        return res.status(400).json({ message: message });
+      }
+    }
+  }
+  @Get('userInbox')
+  async userInbox(@Res() res: Response, @Req() req: Request) {
+    try {
+      return this.usersService.userInbox(res, req);
+    } catch (error) {
+      const { message } = error;
+      if (res.status(500)) {
+        return res.status(500).json({ message: message });
+      } else {
+        return res.status(400).json({ message: message });
+      }
+    }
+  }
+  @Get('clearAll')
+  async cancelAll(@Res() res: Response, @Req() req: Request) {
+    try {
+      return this.usersService.cancelAll(res, req);
+    } catch (error) {
+      const { message } = error;
+      if (res.status(500)) {
+        return res.status(500).json({ message: message });
+      } else {
+        return res.status(400).json({ message: message });
       }
     }
   }

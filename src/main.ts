@@ -8,6 +8,7 @@ import { ConfigService } from '@nestjs/config';
 import { UsersModule } from './users/users.module';
 import { AdminModule } from './admin/admin.module';
 import { ServicerModule } from './servicer/servicer.module';
+import * as bodyParser from 'body-parser';
 
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
@@ -57,7 +58,8 @@ async function bootstrap() {
     include: [UsersModule],
   });
   SwaggerModule.setup('api', app, usersDocument);
-
+  app.use(bodyParser.json({ limit: '50mb' }));
+  app.use(bodyParser.urlencoded({ limit: '50mb', extended: true }));
   app.enableCors(corsOptions);
   await app.listen(port);
 }

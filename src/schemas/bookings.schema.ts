@@ -2,7 +2,8 @@
 import * as mongoose from 'mongoose';
 
 export const BookingSchema = new mongoose.Schema({
-    service: { type: mongoose.Schema.ObjectId, ref: 'SERVICER_MODEL' },
+    bookingId:{type:String,required:true},
     user: { type: mongoose.Schema.ObjectId, ref: 'USER_MODEL' },
-    approved: { type: Boolean, default: false, required: true }
-}); 
+    service: { type: mongoose.Schema.ObjectId, ref: 'SERVICER_MODEL' },
+    approvalStatus: { type: String, default: "Pending", required: true }
+}, { timestamps: true }); 

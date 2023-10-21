@@ -5,7 +5,7 @@ import { ConfigService } from '@nestjs/config';
 import { Response } from 'express';
 import { JwtService } from '@nestjs/jwt';
 import { Servicer } from 'src/servicer/entities/servicer.entity';
-import { Model } from 'mongoose';
+import mongoose, { Model } from 'mongoose';
 import { MailerService } from '@nestjs-modules/mailer';
 import * as otpGenerator from 'otp-generator';
 import { User } from 'src/users/entities/user.entity';
@@ -55,7 +55,15 @@ export class AdminService {
   }
   async approveServicer(id: string, @Res() res: Response) {
     try {
-      const servicesApproved = await this.servicerModel.updateOne(
+      const findApproved = await this.servicerModel.findById({ _id: id });
+      if (findApproved['isApproved'] === true) {
+        await this.servicerModel.updateOne(
+          { _id: id },
+          { $set: { isApproved: false } },
+        );
+        return res.status(201).json({ message: 'Success' });
+      }
+      await this.servicerModel.updateOne(
         { _id: id },
         { $set: { isApproved: true } },
       );
@@ -80,6 +88,16 @@ export class AdminService {
         );
         return res.status(201).json({ message: 'Success', altCode: altCode });
       }
+    } catch (error) {
+      return res.status(500).json({ message: 'Internal Server Error' });
+    }
+  }
+  async servicersApproval(@Res() res: Response) {
+    try {
+      const servicesFind = await this.servicerModel.find({});
+      return res
+        .status(200)
+        .json({ message: 'Success', approvals: servicesFind });
     } catch (error) {
       return res.status(500).json({ message: 'Internal Server Error' });
     }
@@ -149,10 +167,77 @@ export class AdminService {
   }
   async listBookings(@Res() res: Response) {
     try {
-      const listBookings = await this.bookingModel.find({});
+      const listBookings = await this.bookingModel.aggregate([
+        {
+          $lookup: {
+            from: 'servicers',
+            localField: 'service',
+            foreignField: '_id',
+            as: 'services',
+          },
+        },
+        {
+          $unwind: {
+            path: '$services',
+          },
+        },
+      ]);
       return res
         .status(200)
         .json({ message: 'Success', bookings: listBookings });
+    } catch (error) {
+      return res.status(500).json({ message: 'Internal Server Error' });
+    }
+  }
+  async logOut(@Res() res: Response) {
+    try {
+      return res.status(200).json({ message: 'Success' });
+    } catch (error) {
+      return res.status(500).json({ message: 'Internal Server Error' });
+    }
+  }
+  async listUnlist(@Res() res: Response, id: string) {
+    try {
+      const listCheck = await this.categoryModel.find({ _id: id });
+      if (listCheck[0]['list'] === true) {
+        await this.categoryModel.updateOne(
+          { _id: id },
+          { $set: { list: false } },
+        );
+      } else {
+        await this.categoryModel.updateOne(
+          { _id: id },
+          { $set: { list: true } },
+        );
+      }
+      return res.status(201).json({ message: 'Success' });
+    } catch (error) {
+      return res.status(500).json({ message: 'Internal Server Error' });
+    }
+  }
+  async cancelBooking(
+    @Res() res: Response,
+    textArea: string,
+    bookingId: string,
+    userId: string,
+  ) {
+    try {
+      await this.bookingModel.updateOne(
+        { _id: bookingId },
+        { $set: { approvalStatus: 'Cancelled' } },
+      );
+      await this.userModel.updateOne(
+        { _id: userId },
+        {
+          $push: {
+            inbox: {
+              cancelReason: textArea,
+              bookingId: new mongoose.Types.ObjectId(bookingId),
+            },
+          },
+        },
+      );
+      return res.status(201).json({ message: 'Success' });
     } catch (error) {
       return res.status(500).json({ message: 'Internal Server Error' });
     }

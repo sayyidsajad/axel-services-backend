@@ -8,4 +8,9 @@ export const UserSchema = new mongoose.Schema({
   password: { type: String, required: true },
   confirmPassword: { type: String, required: true },
   isBlocked: { type: Boolean, default: false, required: true },
+  inbox: {
+    type: Array,
+    cancelReason: { type: String },
+    bookingId: { types: mongoose.Schema.ObjectId,ref:'BOOKING_MODEL' }
+  }
 });

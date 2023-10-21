@@ -15,5 +15,5 @@ export class servicerProcedures {
   description: string;
   amount: number;
   category: string;
-  files: Express.Multer.File;
+  file: Express.Multer.File;
 }

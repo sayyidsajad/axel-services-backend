@@ -16,7 +16,7 @@ import {
   servicerProcedures,
 } from './dto/create-servicer.dto';
 import { Response } from 'express';
-import { FilesInterceptor } from '@nestjs/platform-express';
+import { FileInterceptor } from '@nestjs/platform-express';
 
 @Controller('servicer')
 export class ServicerController {
@@ -30,10 +30,32 @@ export class ServicerController {
       return this.servicerService.servicerRegister(createServicerDto, res);
     } catch (error) {
       const { message } = error;
-      if (error.message === 'Internal Servor Error') {
+      if (res.status(500)) {
         return res.status(500).json({ message: message });
-      } else if (error.message === 'Email has been already registered') {
+      } else {
         return res.status(400).json({ message: message });
+      }
+    }
+  }
+  @Post('servicerProcedures')
+  @UseInterceptors(FileInterceptor('file'))
+  async servicerProcedures(
+    @Body() servicerProcedures: servicerProcedures,
+    @UploadedFile() file: Express.Multer.File,
+    @Res() res: Response,
+    @Query('id') id: string,
+  ) {
+    try {
+      return this.servicerService.servicerProcedures(
+        servicerProcedures,
+        res,
+        file,
+        id,
+      );
+    } catch (error) {
+      const { message } = error;
+      if (res.status(500)) {
+        return res.status(500).json({ message: message });
       } else {
         return res.status(400).json({ message: message });
       }
@@ -48,39 +70,10 @@ export class ServicerController {
       return this.servicerService.servicerLogin(loggedServicer, res);
     } catch (error) {
       const { message } = error;
-      if (error.message === 'Internal Servor Error') {
+      if (res.status(500)) {
         return res.status(500).json({ message: message });
-      } else if (error.message === 'Email has been already registered') {
-        return res.status(400).json({ message: message });
       } else {
-        return res.status(200).json({ message: message });
-      }
-    }
-  }
-  @Post('servicerProcedures')
-  @UseInterceptors(FilesInterceptor('file'))
-  async servicerProcedures(
-    @Body() servicerProcedures: servicerProcedures,
-    @UploadedFile() file: Express.Multer.File,
-    @Res() res: Response,
-    @Query('id') id: number,
-    @Body() body: any,
-  ) {
-    try {
-      return this.servicerService.servicerProcedures(
-        servicerProcedures,
-        res,
-        file,
-        id,
-      );
-    } catch (error) {
-      const { message } = error;
-      if (error.message === 'Internal Server Error') {
-        return res.status(500).json({ message: message });
-      } else if (error.message === 'Valid Documents Required') {
         return res.status(400).json({ message: message });
-      } else {
-        return res.status(200).json({ message: message });
       }
     }
   }
@@ -90,10 +83,8 @@ export class ServicerController {
       return this.servicerService.servicerDashboard(res);
     } catch (error) {
       const { message } = error;
-      if (error.message === 'Internal Servor Error') {
+      if (res.status(500)) {
         return res.status(500).json({ message: message });
-      } else if (error.message === 'Email has been already registered') {
-        return res.status(400).json({ message: message });
       } else {
         return res.status(400).json({ message: message });
       }
@@ -105,10 +96,8 @@ export class ServicerController {
       return this.servicerService.servicerDetails(res, id);
     } catch (error) {
       const { message } = error;
-      if (error.message === 'Internal Servor Error') {
+      if (res.status(500)) {
         return res.status(500).json({ message: message });
-      } else if (error.message === 'Email has been already registered') {
-        return res.status(400).json({ message: message });
       } else {
         return res.status(400).json({ message: message });
       }
@@ -120,10 +109,8 @@ export class ServicerController {
       return this.servicerService.servicersApproval(res);
     } catch (error) {
       const { message } = error;
-      if (error.message === 'Internal Servor Error') {
+      if (res.status(500)) {
         return res.status(500).json({ message: message });
-      } else if (error.message === 'Email has been already registered') {
-        return res.status(400).json({ message: message });
       } else {
         return res.status(400).json({ message: message });
       }
@@ -135,12 +122,10 @@ export class ServicerController {
       return this.servicerService.sendMail(res, id);
     } catch (error) {
       const { message } = error;
-      if (error.message === 'Internal Server Error') {
+      if (res.status(500)) {
         return res.status(500).json({ message: message });
-      } else if (error.message === 'Invalid OTP') {
-        return res.status(400).json({ message: message });
       } else {
-        return res.status(200).json({ message: message });
+        return res.status(400).json({ message: message });
       }
     }
   }
@@ -150,10 +135,10 @@ export class ServicerController {
       return this.servicerService.loadDashboard(res, id);
     } catch (error) {
       const { message } = error;
-      if (error.message === 'Internal Server Error') {
+      if (res.status(500)) {
         return res.status(500).json({ message: message });
       } else {
-        return res.status(200).json({ message: message });
+        return res.status(400).json({ message: message });
       }
     }
   }
@@ -163,10 +148,47 @@ export class ServicerController {
       return this.servicerService.categoriesList(res);
     } catch (error) {
       const { message } = error;
-      if (error.message === 'Internal Servor Error') {
+      if (res.status(500)) {
         return res.status(500).json({ message: message });
-      } else if (error.message === 'Email has been already registered') {
+      } else {
         return res.status(400).json({ message: message });
+      }
+    }
+  }
+  @Get('logOut')
+  async logOut(@Res() res: Response) {
+    try {
+      return this.servicerService.logOut(res);
+    } catch (error) {
+      const { message } = error;
+      if (res.status(500)) {
+        return res.status(500).json({ message: message });
+      } else {
+        return res.status(400).json({ message: message });
+      }
+    }
+  }
+  @Get('listBookings')
+  async listBookings(@Res() res: Response) {
+    try {
+      return this.servicerService.listBookings(res);
+    } catch (error) {
+      const { message } = error;
+      if (res.status(500)) {
+        return res.status(500).json({ message: message });
+      } else {
+        return res.status(400).json({ message: message });
+      }
+    }
+  }
+  @Post('approveBooking')
+  async approveBooking(@Res() res: Response, @Body('id') id: string) {
+    try {
+      return this.servicerService.approveBooking(res, id);
+    } catch (error) {
+      const { message } = error;
+      if (res.status(500)) {
+        return res.status(500).json({ message: message });
       } else {
         return res.status(400).json({ message: message });
       }

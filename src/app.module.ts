@@ -9,9 +9,11 @@ import { ConfigModule } from '@nestjs/config';
 import { MailerModule } from '@nestjs-modules/mailer';
 import { AuthModule } from './auth/auth.module';
 import { AuthService } from './auth/auth.service';
-import { excluded } from './auth/exclude.auth';
 import { CloudinaryModule } from './cloudinary/cloudinary.module';
 import * as dotenv from 'dotenv';
+import { jwtConstants } from './auth/auth.constants';
+import { JwtModule } from '@nestjs/jwt';
+import { excluded } from './auth/exclude.auth';
 dotenv.config();
 
 @Module({
@@ -19,6 +21,11 @@ dotenv.config();
     UsersModule,
     AdminModule,
     ServicerModule,
+    JwtModule.register({
+      global: true,
+      secret: jwtConstants.secret,
+      signOptions: { expiresIn: '24hr' },
+    }),
     ConfigModule.forRoot({
       envFilePath: ['.env.development.local', '.env.development'],
       ignoreEnvFile: true,
