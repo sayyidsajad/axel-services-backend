@@ -14,6 +14,7 @@ import * as dotenv from 'dotenv';
 import { jwtConstants } from './auth/auth.constants';
 import { JwtModule } from '@nestjs/jwt';
 import { excluded } from './auth/exclude.auth';
+import { MulterModule } from '@nestjs/platform-express';
 dotenv.config();
 
 @Module({
@@ -47,6 +48,9 @@ dotenv.config();
         from: '"No Reply" <no-reply@localhost>',
       },
       preview: true,
+    }),
+    MulterModule.register({
+      dest: '../upload',
     }),
     AuthModule,
     CloudinaryModule,

@@ -9,10 +9,22 @@ import { UsersModule } from './users/users.module';
 import { AdminModule } from './admin/admin.module';
 import { ServicerModule } from './servicer/servicer.module';
 import * as bodyParser from 'body-parser';
+import * as path from 'path';
+import { NestExpressApplication } from '@nestjs/platform-express';
+import { ValidationPipe } from '@nestjs/common';
 
 async function bootstrap() {
-  const app = await NestFactory.create(AppModule);
+  const app = await NestFactory.create<NestExpressApplication>(AppModule);
+  app.useGlobalPipes(
+    new ValidationPipe({
+      // disableErrorMessages: true,
+      whitelist: true,
+      forbidNonWhitelisted: true,
+      transform: true,
+    }),
+  );
   const configService = app.get(ConfigService);
+  app.useStaticAssets(path.join(__dirname, '../upload'));
   const port = configService.get('PORT');
   const clientHost = configService.get('CLIENT_HOST');
   app.use(

@@ -1,4 +1,3 @@
-/* eslint-disable @typescript-eslint/no-unused-vars */
 import { Inject, Injectable, Res } from '@nestjs/common';
 import { CreateAdminDto } from './dto/create-admin.dto';
 import { ConfigService } from '@nestjs/config';
@@ -236,6 +235,51 @@ export class AdminService {
             },
           },
         },
+      );
+      return res.status(201).json({ message: 'Success' });
+    } catch (error) {
+      return res.status(500).json({ message: 'Internal Server Error' });
+    }
+  }
+  async listServices(@Res() res: Response) {
+    try {
+      const listServices = await this.servicerModel.find({});
+      return res
+        .status(200)
+        .json({ message: 'Success', services: listServices });
+    } catch (error) {
+      return res.status(500).json({ message: 'Internal Server Error' });
+    }
+  }
+  async blockServicer(@Res() res: Response, id: string) {
+    try {
+      const findServicer = await this.servicerModel.findById({ _id: id });
+      if (findServicer['isBlocked']) {
+        await this.servicerModel.updateOne(
+          { _id: id },
+          { $set: { isBlocked: false } },
+        );
+      } else {
+        await this.servicerModel.updateOne(
+          { _id: id },
+          { $set: { isBlocked: true } },
+        );
+      }
+      return res.status(200).json({ message: 'Success' });
+    } catch (error) {
+      return res.status(500).json({ message: 'Internal Server Error' });
+    }
+  }
+  async updateCategory(
+    @Res() res: Response,
+    id: string,
+    categoryName: string,
+    description: string,
+  ) {
+    try {
+      await this.categoryModel.updateOne(
+        { _id: id },
+        { $set: { categoryName: categoryName, description: description } },
       );
       return res.status(201).json({ message: 'Success' });
     } catch (error) {

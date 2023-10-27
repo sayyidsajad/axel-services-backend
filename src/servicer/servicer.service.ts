@@ -61,17 +61,21 @@ export class ServicerService {
         return res
           .status(400)
           .json({ message: 'Phone has been already registered' });
+      } else if (
+        createdServicer?.['password'] !== createdServicer?.['confirmPassword']
+      ) {
+        return res
+          .status(400)
+          .json({ message: 'Password and Confirm Password do not match' });
       }
       if (!createdServicer) {
         const salt = await bcrypt.genSalt(10);
         const hashedPassword = await bcrypt.hash(password, salt);
-        const hashedConfirmPassword = await bcrypt.hash(confirmPassword, salt);
         const newServicer = new this.servicerModel({
           companyName: companyName,
           email: email,
           phone: phone,
           password: hashedPassword,
-          confirmPassword: hashedConfirmPassword,
         });
         const savedServicer = await newServicer.save();
         const payload = { token: savedServicer._id };
@@ -86,8 +90,6 @@ export class ServicerService {
           .json({ message: 'Email has been already registered' });
       }
     } catch (error) {
-      console.log(error);
-
       return res.status(500).json({ message: 'Internal Server Error' });
     }
   }
@@ -305,6 +307,33 @@ export class ServicerService {
   async logOut(@Res() res: Response) {
     try {
       return res.status(200).json({ message: 'Success' });
+    } catch (error) {
+      return res.status(500).json({ message: 'Internal Server Error' });
+    }
+  }
+  async cancelBooking(
+    @Res() res: Response,
+    textArea: string,
+    bookingId: string,
+    userId: string,
+  ) {
+    try {
+      await this.bookingModel.updateOne(
+        { _id: bookingId },
+        { $set: { approvalStatus: 'Cancelled' } },
+      );
+      await this.userModel.updateOne(
+        { _id: userId },
+        {
+          $push: {
+            inbox: {
+              cancelReason: textArea,
+              bookingId: new mongoose.Types.ObjectId(bookingId),
+            },
+          },
+        },
+      );
+      return res.status(201).json({ message: 'Success' });
     } catch (error) {
       return res.status(500).json({ message: 'Internal Server Error' });
     }

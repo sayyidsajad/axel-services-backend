@@ -8,6 +8,8 @@ import {
   UseInterceptors,
   Query,
   UploadedFile,
+  ValidationPipe,
+  UsePipes,
 } from '@nestjs/common';
 import { ServicerService } from './servicer.service';
 import {
@@ -22,6 +24,7 @@ import { FileInterceptor } from '@nestjs/platform-express';
 export class ServicerController {
   constructor(private readonly servicerService: ServicerService) {}
   @Post('signup')
+  @UsePipes(new ValidationPipe({ transform: true }))
   async servicerRegister(
     @Body() createServicerDto: CreateServicerDto,
     @Res() res: Response,
@@ -38,6 +41,7 @@ export class ServicerController {
     }
   }
   @Post('servicerProcedures')
+  @UsePipes(new ValidationPipe({ transform: true }))
   @UseInterceptors(FileInterceptor('file'))
   async servicerProcedures(
     @Body() servicerProcedures: servicerProcedures,
@@ -62,6 +66,7 @@ export class ServicerController {
     }
   }
   @Post()
+  @UsePipes(new ValidationPipe({ transform: true }))
   async servicerLogin(
     @Body() loggedServicer: LoginServicerDto,
     @Res() res: Response,
@@ -78,6 +83,7 @@ export class ServicerController {
     }
   }
   @Get('servicerList')
+  @UsePipes(new ValidationPipe({ transform: true }))
   async servicerDashboard(@Res() res: Response) {
     try {
       return this.servicerService.servicerDashboard(res);
@@ -91,6 +97,7 @@ export class ServicerController {
     }
   }
   @Get('servicerDetails')
+  @UsePipes(new ValidationPipe({ transform: true }))
   async servicerDetails(@Res() res: Response, @Query('id') id: string) {
     try {
       return this.servicerService.servicerDetails(res, id);
@@ -104,6 +111,7 @@ export class ServicerController {
     }
   }
   @Get('servicersApproval')
+  @UsePipes(new ValidationPipe({ transform: true }))
   async servicersApproval(@Res() res: Response) {
     try {
       return this.servicerService.servicersApproval(res);
@@ -117,6 +125,7 @@ export class ServicerController {
     }
   }
   @Get('servicerOtpVerification')
+  @UsePipes(new ValidationPipe({ transform: true }))
   async sendMail(@Res() res: Response, @Query('id') id: string) {
     try {
       return this.servicerService.sendMail(res, id);
@@ -130,6 +139,7 @@ export class ServicerController {
     }
   }
   @Post('servicerDashboard')
+  @UsePipes(new ValidationPipe({ transform: true }))
   async loadDashboard(@Res() res: Response, @Body('id') id: string) {
     try {
       return this.servicerService.loadDashboard(res, id);
@@ -143,6 +153,7 @@ export class ServicerController {
     }
   }
   @Get('categoriesList')
+  @UsePipes(new ValidationPipe({ transform: true }))
   async servicesList(@Res() res: Response) {
     try {
       return this.servicerService.categoriesList(res);
@@ -156,6 +167,7 @@ export class ServicerController {
     }
   }
   @Get('logOut')
+  @UsePipes(new ValidationPipe({ transform: true }))
   async logOut(@Res() res: Response) {
     try {
       return this.servicerService.logOut(res);
@@ -169,6 +181,7 @@ export class ServicerController {
     }
   }
   @Get('listBookings')
+  @UsePipes(new ValidationPipe({ transform: true }))
   async listBookings(@Res() res: Response) {
     try {
       return this.servicerService.listBookings(res);
@@ -182,9 +195,34 @@ export class ServicerController {
     }
   }
   @Post('approveBooking')
+  @UsePipes(new ValidationPipe({ transform: true }))
   async approveBooking(@Res() res: Response, @Body('id') id: string) {
     try {
       return this.servicerService.approveBooking(res, id);
+    } catch (error) {
+      const { message } = error;
+      if (res.status(500)) {
+        return res.status(500).json({ message: message });
+      } else {
+        return res.status(400).json({ message: message });
+      }
+    }
+  }
+  @Post('cancelBooking')
+  @UsePipes(new ValidationPipe({ transform: true }))
+  async scancelBooking(
+    @Res() res: Response,
+    @Body('textArea') textArea: string,
+    @Body('bookingId') bookingId: string,
+    @Body('userId') userId: string,
+  ) {
+    try {
+      return this.servicerService.cancelBooking(
+        res,
+        textArea,
+        bookingId,
+        userId,
+      );
     } catch (error) {
       const { message } = error;
       if (res.status(500)) {

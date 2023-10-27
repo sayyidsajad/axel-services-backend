@@ -8,6 +8,8 @@ import {
   Req,
   Query,
   Patch,
+  ValidationPipe,
+  UsePipes,
 } from '@nestjs/common';
 import { UsersService } from './users.service';
 import { CreateUserDto, loggedUserDto } from './dto/create-user.dto';
@@ -17,6 +19,7 @@ import { Response } from 'express';
 export class UsersController {
   constructor(private readonly usersService: UsersService) {}
   @Post('signup')
+  @UsePipes(new ValidationPipe({ transform: true }))
   async userRegister(
     @Body() createUserDto: CreateUserDto,
     @Res() res: Response,
@@ -33,6 +36,7 @@ export class UsersController {
     }
   }
   @Post()
+  @UsePipes(new ValidationPipe({ transform: true }))
   async userLogin(@Body() user: loggedUserDto, @Res() res: Response) {
     try {
       return this.usersService.userLogin(user, res);
@@ -46,6 +50,7 @@ export class UsersController {
     }
   }
   @Get('otpVerification')
+  @UsePipes(new ValidationPipe({ transform: true }))
   async sendMail(@Res() res: Response, @Query('email') email: string) {
     try {
       return this.usersService.sendMail(res, email);
@@ -59,6 +64,7 @@ export class UsersController {
     }
   }
   @Get('home')
+  @UsePipes(new ValidationPipe({ transform: true }))
   async loadHome(@Res() res: Response) {
     try {
       return this.usersService.loadHome(res);
@@ -72,6 +78,7 @@ export class UsersController {
     }
   }
   @Get('logOut')
+  @UsePipes(new ValidationPipe({ transform: true }))
   async logOut(@Res() res: Response) {
     try {
       return this.usersService.logOut(res);
@@ -85,13 +92,17 @@ export class UsersController {
     }
   }
   @Post('bookNow')
+  @UsePipes(new ValidationPipe({ transform: true }))
   async bookNow(
     @Req() req: Request,
     @Res() res: Response,
     @Body('id') id: string,
+    @Body('date') date: Date,
+    @Body('time') time: string,
+    @Body('walletChecked') walletChecked: number,
   ) {
     try {
-      return this.usersService.bookNow(req, res, id);
+      return this.usersService.bookNow(req, res, id, date, time, walletChecked);
     } catch (error) {
       const { message } = error;
       if (res.status(500)) {
@@ -102,6 +113,7 @@ export class UsersController {
     }
   }
   @Get('bookingsList')
+  @UsePipes(new ValidationPipe({ transform: true }))
   async bookingsList(@Res() res: Response) {
     try {
       return this.usersService.bookingsList(res);
@@ -115,9 +127,15 @@ export class UsersController {
     }
   }
   @Patch('cancelBooked')
-  async cancel(@Res() res: Response, @Body('id') id: string) {
+  @UsePipes(new ValidationPipe({ transform: true }))
+  async cancel(
+    @Req() req: Request,
+    @Res() res: Response,
+    @Body('id') id: string,
+    @Body('amount') amount: string,
+  ) {
     try {
-      return this.usersService.cancel(res, id);
+      return this.usersService.cancel(req, res, id, amount);
     } catch (error) {
       const { message } = error;
       if (res.status(500)) {
@@ -128,9 +146,10 @@ export class UsersController {
     }
   }
   @Get('servicerList')
-  async servicerList(@Res() res: Response) {
+  @UsePipes(new ValidationPipe({ transform: true }))
+  async servicerList(@Req() req: Request, @Res() res: Response) {
     try {
-      return this.usersService.servicerList(res);
+      return this.usersService.servicerList(req, res);
     } catch (error) {
       const { message } = error;
       if (res.status(500)) {
@@ -141,6 +160,7 @@ export class UsersController {
     }
   }
   @Get('userInbox')
+  @UsePipes(new ValidationPipe({ transform: true }))
   async userInbox(@Res() res: Response, @Req() req: Request) {
     try {
       return this.usersService.userInbox(res, req);
@@ -154,9 +174,56 @@ export class UsersController {
     }
   }
   @Get('clearAll')
+  @UsePipes(new ValidationPipe({ transform: true }))
   async cancelAll(@Res() res: Response, @Req() req: Request) {
     try {
       return this.usersService.cancelAll(res, req);
+    } catch (error) {
+      const { message } = error;
+      if (res.status(500)) {
+        return res.status(500).json({ message: message });
+      } else {
+        return res.status(400).json({ message: message });
+      }
+    }
+  }
+  @Get('userProfile')
+  @UsePipes(new ValidationPipe({ transform: true }))
+  async userProfile(@Res() res: Response, @Req() req: Request) {
+    try {
+      return this.usersService.userProfile(res, req);
+    } catch (error) {
+      const { message } = error;
+      if (res.status(500)) {
+        return res.status(500).json({ message: message });
+      } else {
+        return res.status(400).json({ message: message });
+      }
+    }
+  }
+  @Post('verifyPayment')
+  @UsePipes(new ValidationPipe({ transform: true }))
+  async verifyPayment(@Res() res: Response, @Body() data: any) {
+    try {
+      return this.usersService.verifyPayment(res, data);
+    } catch (error) {
+      const { message } = error;
+      if (res.status(500)) {
+        return res.status(500).json({ message: message });
+      } else {
+        return res.status(400).json({ message: message });
+      }
+    }
+  }
+  @Get('servicerDetails')
+  @UsePipes(new ValidationPipe({ transform: true }))
+  async servicerDetails(
+    @Req() req: Request,
+    @Res() res: Response,
+    @Query('id') id: string,
+  ) {
+    try {
+      return this.usersService.servicerDetails(req, res, id);
     } catch (error) {
       const { message } = error;
       if (res.status(500)) {

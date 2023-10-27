@@ -1,6 +1,6 @@
 /* eslint-disable @typescript-eslint/no-unused-vars */
 /* eslint-disable prettier/prettier */
-import { Inject, Injectable, Req, Res } from '@nestjs/common';
+import { Body, Inject, Injectable, Req, Res } from '@nestjs/common';
 import { CreateUserDto, bookingDto, loggedUserDto } from './dto/create-user.dto';
 import { User } from './entities/user.entity';
 import { Response } from 'express';
@@ -12,6 +12,7 @@ import * as otpGenerator from 'otp-generator';
 import * as dotenv from 'dotenv';
 import { CreateServicerDto } from 'src/servicer/dto/create-servicer.dto';
 import { ConfigService } from '@nestjs/config';
+import * as moment from 'moment';
 dotenv.config();
 
 @Injectable()
@@ -37,12 +38,14 @@ export class UsersService {
         return res.status(400).json({ message: 'Admin cannot login as user' })
       } else if (registeredServicer?.['email'] === email) {
         return res.status(400).json({ message: 'This Email has been registered by a servicer' })
-      } else if (registeredServicer?.['phone'] === phone) {
+      } else if (registeredServicer?.['phone'] === +phone) {
         return res.status(400).json({ message: 'This phone has been already registered by a servicer' })
       } else if (registered?.['email'] === email) {
         return res.status(400).json({ message: 'Email has been already registered' })
       } else if (registered?.['phone'] === +phone) {
         return res.status(400).json({ message: 'Phone has been already registered' })
+      }else if(registered?.['password'] !== registered?.['confirmPassword']){
+        return res.status(400).json({ message: 'Password and Confirm Password do not match' })
       }
       // if (userFind['provider'] === 'GOOGLE') {
       //   const createdUser = new this.userModel({
@@ -54,13 +57,11 @@ export class UsersService {
       // }
       const salt = await bcrypt.genSalt(10);
       const hashedPassword = await bcrypt.hash(password, salt)
-      const hashedConfirmPassword = await bcrypt.hash(confirmPassword, salt)
       const createdUser = new this.userModel({
         name: name,
         email: email,
         phone: phone,
         password: hashedPassword,
-        confirmPassword: hashedConfirmPassword,
       });
       const userDone = await createdUser.save();
       if (userDone) {
@@ -70,8 +71,6 @@ export class UsersService {
         return res.status(400).json({ message: 'Token not available' })
       }
     } catch (error) {
-      console.log(error);
-
       return res.status(500).json({ message: "Internal Server Error" })
     }
   }
@@ -117,7 +116,7 @@ export class UsersService {
       return res.status(500).json({ message: "Internal Server Error" })
     }
   }
-  async servicerList(@Res() res: Response) {
+  async servicerList(req: Request, @Res() res: Response) {
     try {
       const servicesFind = await this.servicerModel.aggregate([
         {
@@ -147,21 +146,32 @@ export class UsersService {
       return res.status(500).json({ message: "Internal Server Error" })
     }
   }
-  async bookNow(@Req() req: Request, @Res() res: Response, id: string) {
-    try {
+  async bookNow(@Req() req: Request, @Res() res: Response, id: string, date: Date, time: string, walletChecked?: number) {
+    try {      
+      const updatedDate = moment(date).format('DD-MM-YYYY');
+      const updateTime = moment(time).format('hh:mm A');      
       const authHeader = req.headers['authorization'];
       const token = authHeader.split(' ')[1];
       const decoded = this.jwtService.verify(token);
       const userId = decoded.token;
       const lastBookingNum = await this.bookingModel.findOne({}).sort({ createdAt: -1 })
+      const serviceAmount = await this.servicerModel.findOne({ _id: id })
       let lastValue = lastBookingNum?.['bookingId'].slice(2, lastBookingNum?.['bookingId'].length)
+      const reducedAmt = walletChecked ? (serviceAmount['amount'] - walletChecked) : serviceAmount['amount'];
+      if (walletChecked) {
+        await this.userModel.updateOne({ _id: userId }, { $inc: { wallet: -walletChecked }, $push: { walletHistory: { date: new Date(), amount: walletChecked, description: 'Deducted from Wallet' } } })
+      }
       const insertBooking = new this.bookingModel({
+        date: updatedDate,
+        time: updateTime,
         bookingId: `BK${lastValue ? ++lastValue : 1}`,
         user: userId,
-        service: id
+        service: id,
+        paymentStatus: 'Pending',
+        total: reducedAmt
       })
-      await insertBooking.save()
-      return res.status(200).json({ message: 'Success' })
+      const inserted = await insertBooking.save()
+      return res.status(200).json({ message: 'Success', inserted: inserted, reducedAmt })
     } catch (error) {
       return res.status(500).json({ message: "Internal Server Error" })
     }
@@ -189,10 +199,16 @@ export class UsersService {
       return res.status(500).json({ message: "Internal Server Error" })
     }
   }
-  async cancel(@Res() res: Response, id: string) {
+  async cancel(req: Request, @Res() res: Response, id: string, amount: string) {
     try {
+      const authHeader = req.headers['authorization'];
+      const token = authHeader.split(' ')[1];
+      const decoded = this.jwtService.verify(token);
+      const userId = decoded.token;
       await this.bookingModel.updateOne({ _id: id }, { $set: { approvalStatus: 'Cancelled' } })
-      return res.status(200).json({ message: 'Success' })
+      const bookedAmt = await this.bookingModel.findById({ _id: id })
+      await this.userModel.updateOne({ _id: userId }, { $inc: { wallet: bookedAmt['total'] }, $push: { walletHistory: { date: new Date(), amount: bookedAmt['total'], description: 'Added to wallet on cancellation of service.' } } })
+      return res.status(201).json({ message: 'Success' })
     } catch (error) {
       return res.status(500).json({ message: "Internal Server Error" })
     }
@@ -232,13 +248,13 @@ export class UsersService {
         },
       ]);
       const inboxData = result.map(user => user.inbox);
-      const serviceData = result.map(user => user.inbox.bookingDetails.service);      
-      return res.status(200).json({ message: 'Success', inbox: inboxData,service:serviceData })
+      const serviceData = result.map(user => user.inbox.bookingDetails.service);
+      return res.status(200).json({ message: 'Success', inbox: inboxData, service: serviceData })
     } catch (error) {
       return res.status(500).json({ message: "Internal Server Error" })
     }
   }
-  async cancelAll(@Res() res: Response,@Req() req:Request) {
+  async cancelAll(@Res() res: Response, @Req() req: Request) {
     try {
       const authHeader = req.headers['authorization'];
       const token = authHeader.split(' ')[1];
@@ -248,6 +264,56 @@ export class UsersService {
       return res.status(200).json({ message: 'Success' })
     } catch (error) {
       return res.status(500).json({ message: "Internal Server Error" })
+    }
+  }
+  async verifyPayment(@Res() res: Response, @Body() data: any) {
+    try {
+      const { razorpay_payment_id } = data.res
+      const { _id } = data.inserted.inserted
+      if (razorpay_payment_id) {
+        await this.bookingModel.updateOne(
+          { _id: _id },
+          { $set: { paymentStatus: "Success" } }
+        );
+        return res.status(200).json({
+          message: "Payment success",
+        });
+      } else {
+        await this.bookingModel.updateOne(
+          { _id: _id },
+          { $set: { paymentStatus: "Failed" } }
+        );
+        return res.status(400).json({
+          message: "Payment failed",
+        });
+      }
+    } catch (error) {
+      return res.status(500).json({ message: "Internal Server Error" });
+    }
+  }
+  async userProfile(@Res() res: Response, req: Request) {
+    try {
+      const authHeader = req.headers['authorization'];
+      const token = authHeader.split(' ')[1];
+      const decoded = await this.jwtService.verify(token);
+      const userId = decoded.token;
+      const user = await this.userModel.findOne({ _id: userId })
+      return res.status(200).json({ message: 'Success', user: user })
+    } catch (error) {
+      return res.status(500).json({ message: "Internal Server Error" })
+    }
+  }
+  async servicerDetails(req: Request, @Res() res: Response, id: string) {
+    try {
+      const authHeader = req.headers['authorization'];
+      const token = authHeader.split(' ')[1];
+      const decoded = await this.jwtService.verify(token);
+      const userId = decoded.token;
+      const servicesFind = await this.servicerModel.find({ _id: id })
+      const wallet = await this.userModel.findById({ _id: userId })
+      return res.status(200).json({ servicesFind, wallet: wallet['wallet'] });
+    } catch (error) {
+      return res.status(500).json({ message: 'Internal Server Error' });
     }
   }
 }
