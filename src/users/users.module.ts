@@ -8,10 +8,15 @@ import { ConfigModule } from '@nestjs/config';
 import { servicerProviders } from 'src/servicer/servicer.providers';
 import * as dotenv from 'dotenv';
 import { bookingProviders } from 'src/admin/admin.providers';
+import { TwilioModule } from 'nestjs-twilio';
 dotenv.config();
 
 @Module({
-  imports: [DatabaseModule, ConfigModule],
+  imports: [DatabaseModule, ConfigModule,
+    TwilioModule.forRoot({
+      accountSid: process.env.TWILIO_ACCOUNT_SID,
+      authToken: process.env.TWILIO_AUTH_TOKEN,
+    })],
   controllers: [UsersController],
   providers: [
     UsersService,

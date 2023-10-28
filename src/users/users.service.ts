@@ -13,6 +13,7 @@ import * as dotenv from 'dotenv';
 import { CreateServicerDto } from 'src/servicer/dto/create-servicer.dto';
 import { ConfigService } from '@nestjs/config';
 import * as moment from 'moment';
+import { TwilioService } from 'nestjs-twilio';
 dotenv.config();
 
 @Injectable()
@@ -26,7 +27,8 @@ export class UsersService {
     private servicerModel: Model<CreateServicerDto>,
     private configService: ConfigService,
     private jwtService: JwtService,
-    private readonly mailerService: MailerService
+    private readonly mailerService: MailerService,
+    private readonly twilioService: TwilioService
   ) { }
   async userRegister(createUserDto: CreateUserDto, @Res() res: Response): Promise<User> {
     try {
@@ -44,7 +46,7 @@ export class UsersService {
         return res.status(400).json({ message: 'Email has been already registered' })
       } else if (registered?.['phone'] === +phone) {
         return res.status(400).json({ message: 'Phone has been already registered' })
-      }else if(registered?.['password'] !== registered?.['confirmPassword']){
+      } else if (registered?.['password'] !== registered?.['confirmPassword']) {
         return res.status(400).json({ message: 'Password and Confirm Password do not match' })
       }
       // if (userFind['provider'] === 'GOOGLE') {
@@ -147,9 +149,9 @@ export class UsersService {
     }
   }
   async bookNow(@Req() req: Request, @Res() res: Response, id: string, date: Date, time: string, walletChecked?: number) {
-    try {      
+    try {
       const updatedDate = moment(date).format('DD-MM-YYYY');
-      const updateTime = moment(time).format('hh:mm A');      
+      const updateTime = moment(time).format('hh:mm A');
       const authHeader = req.headers['authorization'];
       const token = authHeader.split(' ')[1];
       const decoded = this.jwtService.verify(token);
@@ -275,6 +277,11 @@ export class UsersService {
           { _id: _id },
           { $set: { paymentStatus: "Success" } }
         );
+        this.twilioService.client.calls.create({
+          url: 'http://demo.twilio.com/docs/voice.xml',
+          from: process.env.TWILIO_PHONE_NUMBER,
+          to: process.env.MY_NUMBER,
+        });
         return res.status(200).json({
           message: "Payment success",
         });
@@ -312,6 +319,40 @@ export class UsersService {
       const servicesFind = await this.servicerModel.find({ _id: id })
       const wallet = await this.userModel.findById({ _id: userId })
       return res.status(200).json({ servicesFind, wallet: wallet['wallet'] });
+    } catch (error) {
+      return res.status(500).json({ message: 'Internal Server Error' });
+    }
+  }
+  async forgotPassword(@Res() res: Response, email: string) {
+    try {
+      const registeredEmail = await this.userModel.findOne({ email: email })
+      if (registeredEmail) {
+        const otp = await otpGenerator.generate(4, { digits: true, upperCaseAlphabets: false, lowerCaseAlphabets: false, specialChars: false });
+        const resetLink = `localhost:4200/resetPassword?id=${registeredEmail['_id']}`
+        this.mailerService.sendMail({
+          to: `${email}`,
+          from: process.env.DEV_MAIL,
+          subject: 'Axel Services Email Verification',
+          text: 'Axel Services',
+          html: `<a>${resetLink}</a>`
+        })
+        return res.status(200).json({ message: 'Success' })
+      } else {
+        return res.status(400).json({ message: "There is no email registered in this account" });
+      }
+    } catch (error) {
+      return res.status(500).json({ message: 'Internal Server Error' });
+    }
+  }
+  async verifyConfirmPassword(@Res() res: Response, id: string, newPassword: string, newConfirmPassword: string) {
+    try {
+      if (newPassword !== newConfirmPassword) {
+        return res.status(400).json({ message: 'New Password and Confirm New Password do not match' });
+      }
+      const salt = await bcrypt.genSalt(10);
+      const hashedPassword = await bcrypt.hash(newPassword, salt)
+      await this.userModel.updateOne({ _id: id }, { $set: { password: hashedPassword } })
+      return res.status(200).json({ message: 'Success' });
     } catch (error) {
       return res.status(500).json({ message: 'Internal Server Error' });
     }

@@ -14,4 +14,6 @@ export const excluded = [
   '/servicer/adminServicerApproval',
   '/admin/servicersApproval',
   '/servicer/servicerDashboard',
+  '/forgotPassword',
+  '/verifyConfirmPassword'
 ];

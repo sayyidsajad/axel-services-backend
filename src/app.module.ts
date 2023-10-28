@@ -15,6 +15,7 @@ import { jwtConstants } from './auth/auth.constants';
 import { JwtModule } from '@nestjs/jwt';
 import { excluded } from './auth/exclude.auth';
 import { MulterModule } from '@nestjs/platform-express';
+import { MessagesModule } from './messages/messages.module';
 dotenv.config();
 
 @Module({
@@ -54,6 +55,7 @@ dotenv.config();
     }),
     AuthModule,
     CloudinaryModule,
+    MessagesModule,
   ],
   controllers: [AppController],
   providers: [AppService],

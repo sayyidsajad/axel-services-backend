@@ -233,4 +233,42 @@ export class UsersController {
       }
     }
   }
+  @Post('forgotPassword')
+  @UsePipes(new ValidationPipe({ transform: true }))
+  async forgotPassword(@Res() res: Response, @Body('email') email: string) {
+    try {
+      return this.usersService.forgotPassword(res, email);
+    } catch (error) {
+      const { message } = error;
+      if (res.status(500)) {
+        return res.status(500).json({ message: message });
+      } else {
+        return res.status(400).json({ message: message });
+      }
+    }
+  }
+  @Post('verifyConfirmPassword')
+  @UsePipes(new ValidationPipe({ transform: true }))
+  async verifyConfirmPassword(
+    @Res() res: Response,
+    @Body('newPassword') newPassword: string,
+    @Body('newConfirmPassword') newConfirmPassword: string,
+    @Query('id') id: string,
+  ) {
+    try {
+      return this.usersService.verifyConfirmPassword(
+        res,
+        id,
+        newPassword,
+        newConfirmPassword,
+      );
+    } catch (error) {
+      const { message } = error;
+      if (res.status(500)) {
+        return res.status(500).json({ message: message });
+      } else {
+        return res.status(400).json({ message: message });
+      }
+    }
+  }
 }
