@@ -25,6 +25,8 @@ export class UsersService {
     private bookingModel: Model<bookingDto>,
     @Inject('SERVICER_MODEL')
     private servicerModel: Model<CreateServicerDto>,
+    @Inject('MESSAGING_MODEL')
+    private messagingModel: Model<any>,
     private configService: ConfigService,
     private jwtService: JwtService,
     private readonly mailerService: MailerService,
@@ -327,7 +329,6 @@ export class UsersService {
     try {
       const registeredEmail = await this.userModel.findOne({ email: email })
       if (registeredEmail) {
-        const otp = await otpGenerator.generate(4, { digits: true, upperCaseAlphabets: false, lowerCaseAlphabets: false, specialChars: false });
         const resetLink = `localhost:4200/resetPassword?id=${registeredEmail['_id']}`
         this.mailerService.sendMail({
           to: `${email}`,
@@ -353,6 +354,15 @@ export class UsersService {
       const hashedPassword = await bcrypt.hash(newPassword, salt)
       await this.userModel.updateOne({ _id: id }, { $set: { password: hashedPassword } })
       return res.status(200).json({ message: 'Success' });
+    } catch (error) {
+      return res.status(500).json({ message: 'Internal Server Error' });
+    }
+  }
+  async getRecentChats(id: string, res: Response) {
+    try {      
+      const findConnection = await this.messagingModel.findOne({ connectionId: id })            
+      if (findConnection) return res.status(200).json({ message: findConnection })
+      return res.status(200)
     } catch (error) {
       return res.status(500).json({ message: 'Internal Server Error' });
     }

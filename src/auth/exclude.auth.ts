@@ -16,5 +16,6 @@ export const excluded = [
   '/servicer/servicerDashboard',
   '/forgotPassword',
   '/verifyConfirmPassword',
-  '/findAllMessages'
+  '/findAllMessages',
+  '/apiDocs'
 ];

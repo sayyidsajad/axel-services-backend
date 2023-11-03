@@ -10,6 +10,7 @@ import {
   Patch,
   ValidationPipe,
   UsePipes,
+  Param,
 } from '@nestjs/common';
 import { UsersService } from './users.service';
 import { CreateUserDto, loggedUserDto } from './dto/create-user.dto';
@@ -262,6 +263,20 @@ export class UsersController {
         newPassword,
         newConfirmPassword,
       );
+    } catch (error) {
+      const { message } = error;
+      if (res.status(500)) {
+        return res.status(500).json({ message: message });
+      } else {
+        return res.status(400).json({ message: message });
+      }
+    }
+  }
+  @Get('getRecentChats')
+  @UsePipes(new ValidationPipe({ transform: true }))
+  async getRecentChats(@Query('id') id: string, @Res() res: Response) {
+    try {
+      return this.usersService.getRecentChats(id, res);
     } catch (error) {
       const { message } = error;
       if (res.status(500)) {
