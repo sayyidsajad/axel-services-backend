@@ -267,9 +267,9 @@ export class ServicerController {
   }
   @Get('dashboardReports')
   @UsePipes(new ValidationPipe({ transform: true }))
-  async dashboardReports(@Res() res: Response) {
+  async dashboardReports(@Res() res: Response, @Req() req: Request) {
     try {
-      return this.servicerService.dashboardReports(res);
+      return this.servicerService.dashboardReports(res, req);
     } catch (error) {
       const { message } = error;
       if (res.status(500)) {

@@ -40,8 +40,7 @@ export class ServicerService {
     @Res() res: Response,
   ) {
     try {
-      const { companyName, email, password, confirmPassword, phone } =
-        createServicerDto;
+      const { companyName, email, password, phone } = createServicerDto;
       const adminEmail = this.configService.get<string>('ADMIN_EMAIL');
       const createdServicer = await this.servicerModel.findOne({
         email: email,
@@ -402,13 +401,65 @@ export class ServicerService {
       return res.status(500).json({ message: 'Internal Server Error' });
     }
   }
-  async dashboardReports(res: Response) {
+  async dashboardReports(res: Response, req: Request) {
     try {
-      const Pending = await this.bookingModel.find({
-        approvalStatus: 'Pending',
+      const authHeader = req.headers['authorization'];
+      const token = authHeader.split(' ')[1];
+      const decoded = await this.jwtService.verify(token);
+      const servicerId = decoded.token;
+      const pending = await this.bookingModel
+        .find({ service: servicerId, approvalStatus: 'Pending' })
+        .count();
+      const cancelled = await this.bookingModel
+        .find({ service: servicerId, approvalStatus: 'Cancelled' })
+        .count();
+      const serviceCompleted = await this.bookingModel
+        .find({ service: servicerId, approvalStatus: 'Service Completed' })
+        .count();
+      const currentSalesYear = new Date(new Date().getFullYear(), 0, 1);
+      const sales = [];
+      const salesByYear = await this.bookingModel.aggregate([
+        {
+          $match: {
+            service: new mongoose.Types.ObjectId(servicerId),
+            createdAt: { $gte: currentSalesYear },
+            approvalStatus: { $ne: 'Cancelled' },
+          },
+        },
+        {
+          $group: {
+            _id: { $dateToString: { format: '%m', date: '$createdAt' } },
+            total: { $sum: '$total' },
+            count: { $sum: 1 },
+          },
+        },
+        { $sort: { _id: 1 } },
+      ]);
+      for (let i = 1; i <= 12; i++) {
+        let result = true;
+        for (let j = 0; j < salesByYear.length; j++) {
+          result = false;
+          if (salesByYear[j]._id == i) {
+            sales.push(salesByYear[j]);
+            break;
+          } else {
+            result = true;
+          }
+        }
+        if (result) sales.push({ _id: i, total: 0, count: 0 });
+      }
+      const salesData = [];
+      for (let i = 0; i < sales.length; i++) {
+        salesData.push(sales[i].total);
+      }
+      return res.status(200).json({
+        approvalStatus: {
+          pending,
+          cancelled,
+          serviceCompleted,
+        },
+        salesData: salesData,
       });
-      console.log(Pending,'this is pending in the backend');
-      
     } catch (error) {
       return res.status(500).json({ message: 'Internal Server Error' });
     }

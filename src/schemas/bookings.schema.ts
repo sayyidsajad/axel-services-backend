@@ -9,5 +9,5 @@ export const BookingSchema = new mongoose.Schema({
     service: { type: mongoose.Schema.ObjectId, ref: 'SERVICER_MODEL' },
     approvalStatus: { type: String, default: "Pending", required: true },
     paymentStatus: { type: String, required: true },
-    total:{type:Number,required:true}
+    total: { type: Number, required: true }
 }, { timestamps: true }); 
