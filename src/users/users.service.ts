@@ -358,11 +358,28 @@ export class UsersService {
       return res.status(500).json({ message: 'Internal Server Error' });
     }
   }
-  async getRecentChats(id: string, res: Response) {
-    try {      
-      const findConnection = await this.messagingModel.findOne({ connectionId: id })            
-      if (findConnection) return res.status(200).json({ message: findConnection })
-      return res.status(200)
+  async getRecentChats(id: string, res: Response, req: Request) {
+    try {
+      const authHeader = req.headers['authorization'];
+      const token = authHeader.split(' ')[1];
+      const decoded = await this.jwtService.verify(token);
+      const userId = decoded.token;
+      const findConnection = await this.messagingModel.findOne({
+        users: { $all: [userId, id] }
+      }).populate('messages.sender')
+        .populate('messages.receiver');        
+      if (findConnection) {
+        return res.status(200).json({ message: findConnection, userId: userId })
+      } else {
+        const newRoom = new this.messagingModel({
+          users: [
+            userId, id
+          ]
+        })
+        newRoom.save().then((data: any) => {
+          return res.status(200).json({ userId: userId, message: data })
+        })
+      }
     } catch (error) {
       return res.status(500).json({ message: 'Internal Server Error' });
     }

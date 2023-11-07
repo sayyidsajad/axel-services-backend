@@ -274,9 +274,13 @@ export class UsersController {
   }
   @Get('getRecentChats')
   @UsePipes(new ValidationPipe({ transform: true }))
-  async getRecentChats(@Query('id') id: string, @Res() res: Response) {
+  async getRecentChats(
+    @Query('id') id: string,
+    @Res() res: Response,
+    @Req() req: Request,
+  ) {
     try {
-      return this.usersService.getRecentChats(id, res);
+      return this.usersService.getRecentChats(id, res, req);
     } catch (error) {
       const { message } = error;
       if (res.status(500)) {

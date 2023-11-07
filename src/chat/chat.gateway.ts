@@ -21,23 +21,24 @@ export class ChatGateway {
     if (!client) {
       return;
     }
-    const { id } = client.handshake.query;
-    client.broadcast.to(id).emit('member-joined', { name: id });
+    // const { Roomid } = client.handshake.query;
+    // client.broadcast.to(Roomid).emit('member-joined');
   }
   @SubscribeMessage('disconnect')
   handleDisconnection(client: Socket, roomName: any) {
     client.leave(roomName.name);
   }
   @SubscribeMessage('join')
-  handleJoinEvent(client: Socket, roomName: any) {
-    client.join(roomName.name);
+  async handleJoinEvent(
+    @ConnectedSocket() client: Socket,
+    @MessageBody() roomName: any,
+  ) {
+    client.join(roomName.Roomid);
+    client.broadcast.to(roomName.Roomid).emit('member-joined');
   }
   @SubscribeMessage('new-message')
-  async handleNewMessage(
-    @MessageBody() data: any,
-    @ConnectedSocket() client: Socket,
-  ) {
-    await this.chatService.newMessage(data.data, data.id);
-    client.to(data.id).emit('new-messge', data.data);
+  async handleNewMessage(@MessageBody() data: any) {
+    const newMessage = await this.chatService.newMessage(data);
+    this.server.to(data.id).emit('new-message', newMessage);
   }
 }

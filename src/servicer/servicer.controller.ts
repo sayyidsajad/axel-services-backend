@@ -10,6 +10,7 @@ import {
   UploadedFile,
   ValidationPipe,
   UsePipes,
+  Req,
 } from '@nestjs/common';
 import { ServicerService } from './servicer.service';
 import {
@@ -223,6 +224,52 @@ export class ServicerController {
         bookingId,
         userId,
       );
+    } catch (error) {
+      const { message } = error;
+      if (res.status(500)) {
+        return res.status(500).json({ message: message });
+      } else {
+        return res.status(400).json({ message: message });
+      }
+    }
+  }
+  @Get('getRecentUsers')
+  @UsePipes(new ValidationPipe({ transform: true }))
+  async getRecentUsers(@Req() req: Request, @Res() res: Response) {
+    try {
+      return this.servicerService.getRecentUsers(res, req);
+    } catch (error) {
+      const { message } = error;
+      if (res.status(500)) {
+        return res.status(500).json({ message: message });
+      } else {
+        return res.status(400).json({ message: message });
+      }
+    }
+  }
+  @Get('getRecentChats')
+  @UsePipes(new ValidationPipe({ transform: true }))
+  async getRecentChats(
+    @Query('id') id: string,
+    @Res() res: Response,
+    @Req() req: Request,
+  ) {
+    try {
+      return this.servicerService.getRecentChats(id, res, req);
+    } catch (error) {
+      const { message } = error;
+      if (res.status(500)) {
+        return res.status(500).json({ message: message });
+      } else {
+        return res.status(400).json({ message: message });
+      }
+    }
+  }
+  @Get('dashboardReports')
+  @UsePipes(new ValidationPipe({ transform: true }))
+  async dashboardReports(@Res() res: Response) {
+    try {
+      return this.servicerService.dashboardReports(res);
     } catch (error) {
       const { message } = error;
       if (res.status(500)) {

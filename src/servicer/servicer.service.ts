@@ -28,6 +28,8 @@ export class ServicerService {
     private bookingModel: Model<any>,
     @Inject('USER_MODEL')
     private userModel: Model<any>,
+    @Inject('MESSAGING_MODEL')
+    private messagingModel: Model<any>,
     private jwtService: JwtService,
     private readonly mailerService: MailerService,
     private cloudinary: CloudinaryService,
@@ -334,6 +336,79 @@ export class ServicerService {
         },
       );
       return res.status(201).json({ message: 'Success' });
+    } catch (error) {
+      return res.status(500).json({ message: 'Internal Server Error' });
+    }
+  }
+  async getRecentUsers(res: Response, req: Request) {
+    try {
+      const authHeader = req.headers['authorization'];
+      const token = authHeader.split(' ')[1];
+      const decoded = await this.jwtService.verify(token);
+      const servicerId = decoded.token;
+      const findConnection = await this.messagingModel
+        .findOne({
+          users: { $in: [servicerId] },
+        })
+        .populate('messages.sender')
+        .populate('messages.receiver');
+
+      const userSenderTypes = findConnection.messages
+        .filter((message) => message.senderType === 'User')
+        .map((message) => ({
+          name: message.sender.name,
+          id: message.sender._id,
+        }));
+      const uniqueUserSenderTypes = [
+        ...new Set(userSenderTypes.map((obj) => JSON.stringify(obj))),
+      ].map((str) => JSON.parse(str as string));
+      return res.status(200).json({
+        message: uniqueUserSenderTypes,
+        servicerId: servicerId,
+      });
+    } catch (error) {
+      return res.status(500).json({ message: 'Internal Server Error' });
+    }
+  }
+  async getRecentChats(id: string, res: Response, req: Request) {
+    try {
+      const authHeader = req.headers['authorization'];
+      const token = authHeader.split(' ')[1];
+      const decoded = await this.jwtService.verify(token);
+      const servicerId = decoded.token;
+      const findConnection = await this.messagingModel
+        .findOne({
+          users: { $all: [servicerId, id] },
+        })
+        .populate('messages.sender')
+        .populate('messages.receiver');
+      if (findConnection) {
+        return res.status(200).json({
+          message: findConnection,
+          servicerId: servicerId,
+          id: findConnection._id,
+        });
+      } else {
+        const newRoom = new this.messagingModel({
+          users: [servicerId, id],
+        });
+        newRoom.save().then((data: any) => {
+          return res
+            .status(200)
+            .json({ message: data, servicerId: servicerId, id: data._id });
+        });
+      }
+    } catch (error) {
+      return res.status(500).json({ message: 'Internal Server Error' });
+    }
+  }
+  async dashboardReports(res: Response) {
+    try {
+      const Pending = await this.bookingModel.find({
+        approvalStatus: 'Pending',
+      });
+      console.log(Pending,'this is pending in the backend');
+      
     } catch (error) {
       return res.status(500).json({ message: 'Internal Server Error' });
     }
