@@ -1,4 +1,3 @@
-/* eslint-disable prettier/prettier */
 import { v2 } from 'cloudinary';
 import { CLOUDINARY } from './constants';
 import * as dotenv from 'dotenv';

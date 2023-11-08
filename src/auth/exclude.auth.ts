@@ -1,4 +1,3 @@
-/* eslint-disable prettier/prettier */
 export const excluded = [
   '/',
   '/otpVerification',
@@ -17,5 +16,5 @@ export const excluded = [
   '/forgotPassword',
   '/verifyConfirmPassword',
   '/findAllMessages',
-  '/apiDocs'
+  '/apiDocs',
 ];

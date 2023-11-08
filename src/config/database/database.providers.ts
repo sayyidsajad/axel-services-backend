@@ -1,7 +1,6 @@
-/* eslint-disable prettier/prettier */
 import * as mongoose from 'mongoose';
 import * as dotenv from 'dotenv';
-dotenv.config()
+dotenv.config();
 
 export const databaseProviders = [
   {

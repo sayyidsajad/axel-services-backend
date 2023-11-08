@@ -10,7 +10,6 @@ import {
   Patch,
   ValidationPipe,
   UsePipes,
-  Param,
 } from '@nestjs/common';
 import { UsersService } from './users.service';
 import { CreateUserDto, loggedUserDto } from './dto/create-user.dto';
@@ -64,11 +63,11 @@ export class UsersController {
       }
     }
   }
-  @Get('home')
+  @Patch('home')
   @UsePipes(new ValidationPipe({ transform: true }))
-  async loadHome(@Res() res: Response) {
+  async loadHome(@Res() res: Response, @Body('email') email: string) {
     try {
-      return this.usersService.loadHome(res);
+      return this.usersService.loadHome(res, email);
     } catch (error) {
       const { message } = error;
       if (res.status(500)) {

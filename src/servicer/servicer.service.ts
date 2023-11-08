@@ -229,7 +229,31 @@ export class ServicerService {
         from: process.env.DEV_MAIL,
         subject: 'Axel Services Email Verification',
         text: 'Axel Services',
-        html: `<h1>Welcome User, Please enter the OTP to move Further! <b>${otp}</b> </h1>`,
+        html: `<table style="max-width: 600px; margin: 0 auto; padding: 20px;">
+        <tr>
+            <td style="text-align: center; background-color: #000; padding: 10px; color: #fff;">
+                <h1>OTP Verification</h1>
+            </td>
+        </tr>
+        <tr>
+            <td style="padding: 20px;">
+                <p>Hello, ${findEmail['companyName'].toUpperCase()}</p>
+                <p>You are just one step away from accessing our platform. To ensure your security and access to our services, please verify your identity by entering the OTP (One-Time Password) provided below:</p>
+                <p>OTP: <strong style="background-color: #000;color: #fff;">${otp}</strong></p>
+                <p>Please use this OTP to complete the verification process and start hosting with us.</p>
+                <p>If you did not request this verification, please ignore this email, and contact our support team immediately.</p>
+                <p>Thank you for choosing our platform. We look forward to having you as part of our community.</p>
+                <p>If you have any questions or need assistance, please feel free to contact our support team.</p>
+                <p>Best regards,<br>Your Axel Services Team</p>
+            </td>
+        </tr>
+        <tr>
+            <td style="text-align: center; background-color: #000; padding: 10px; color: #fff;">
+                <p>&copy; ${new Date().getFullYear()} Axel Services. All rights reserved.</p>
+            </td>
+        </tr>
+    </table>
+    `,
       });
       return res.status(200).json({ message: 'Success', otp: otp });
     } catch (error) {
@@ -351,7 +375,6 @@ export class ServicerService {
         })
         .populate('messages.sender')
         .populate('messages.receiver');
-
       const userSenderTypes = findConnection.messages
         .filter((message) => message.senderType === 'User')
         .map((message) => ({

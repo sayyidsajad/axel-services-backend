@@ -7,6 +7,9 @@ import {
 } from '@nestjs/websockets';
 import { ChatService } from './chat.service';
 import { Server, Socket } from 'socket.io';
+import * as dotenv from 'dotenv';
+dotenv.config();
+
 @WebSocketGateway({
   cors: {
     origin: '*',
@@ -21,8 +24,6 @@ export class ChatGateway {
     if (!client) {
       return;
     }
-    // const { Roomid } = client.handshake.query;
-    // client.broadcast.to(Roomid).emit('member-joined');
   }
   @SubscribeMessage('disconnect')
   handleDisconnection(client: Socket, roomName: any) {

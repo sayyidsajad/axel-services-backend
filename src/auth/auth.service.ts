@@ -1,4 +1,3 @@
-/* eslint-disable @typescript-eslint/no-unused-vars */
 import { Injectable, NestMiddleware } from '@nestjs/common';
 import { Request, Response, NextFunction } from 'express';
 import { JwtService } from '@nestjs/jwt';
@@ -7,7 +6,6 @@ import { JwtService } from '@nestjs/jwt';
 export class AuthService implements NestMiddleware {
   constructor(private readonly jwtService: JwtService) {}
   async use(req: Request, res: Response, next: NextFunction) {
-    const { authorization } = req.headers;
     const authHeader = req.headers['authorization'];
     if (!authHeader || !authHeader.startsWith('Bearer ')) {
       return res.status(401).json({ message: 'Unauthorized' });

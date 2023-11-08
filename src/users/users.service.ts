@@ -34,7 +34,7 @@ export class UsersService {
   ) { }
   async userRegister(createUserDto: CreateUserDto, @Res() res: Response): Promise<User> {
     try {
-      const { name, email, phone, password, confirmPassword } = createUserDto
+      const { name, email, phone, password } = createUserDto
       const adminEmail = this.configService.get<string>('ADMIN_EMAIL');
       const registeredServicer = await this.servicerModel.findOne({ email: email })
       const registered = await this.userModel.findOne({ phone: phone })
@@ -90,6 +90,9 @@ export class UsersService {
       } else if (userFind['isBlocked'] === true) {
         return res.status(400).json({ message: 'User has been blocked by admin' });
       }
+      if (userFind['isVerified'] !== true) {
+        return res.status(200).json({ message: 'User not verified, Please verify', verified: false, email: userFind['email'] })
+      }
       const payload = { token: userFind._id }
       return res.status(200).json({ access_token: await this.jwtService.sign(payload), message: "Success" })
     } catch (error) {
@@ -105,16 +108,41 @@ export class UsersService {
         from: process.env.DEV_MAIL,
         subject: 'Axel Services Email Verification',
         text: 'Axel Services',
-        html: `<h1>Welcome User, Please enter the OTP to move Further! <b>${otp}</b> </h1>`
-      })
+        html: `<table style="max-width: 600px; margin: 0 auto; padding: 20px;">
+        <tr>
+            <td style="text-align: center; background-color: #000; padding: 10px; color: #fff;">
+                <h1>OTP Verification</h1>
+            </td>
+        </tr>
+        <tr>
+            <td style="padding: 20px;">
+                <p>Hello, ${findId['name'].toUpperCase()}</p>
+                <p>You are just one step away from accessing our platform. To ensure your security and access to our services, please verify your identity by entering the OTP (One-Time Password) provided below:</p>
+                <p>OTP: <strong style="background-color: #000;color: #fff;">${otp}</strong></p>
+                <p>Please use this OTP to complete the verification process and start hosting with us.</p>
+                <p>If you did not request this verification, please ignore this email, and contact our support team immediately.</p>
+                <p>Thank you for choosing our platform. We look forward to having you as part of our community.</p>
+                <p>If you have any questions or need assistance, please feel free to contact our support team.</p>
+                <p>Best regards,<br>Your Axel Services Team</p>
+            </td>
+        </tr>
+        <tr>
+            <td style="text-align: center; background-color: #000; padding: 10px; color: #fff;">
+                <p>&copy; ${new Date().getFullYear()} Axel Services. All rights reserved.</p>
+            </td>
+        </tr>
+    </table>
+    `,
+      });
       const payload = { token: findId._id }
       return res.status(200).json({ message: 'Success', otp: otp, access_token: await this.jwtService.sign(payload) })
     } catch (error) {
       return res.status(500).json({ message: "Internal Server Error" })
     }
   }
-  async loadHome(@Res() res: Response) {
+  async loadHome(@Res() res: Response, email: string) {
     try {
+      await this.userModel.updateOne({ email: email }, { $set: { isVerified: true } })
       return res.status(200).json({ message: 'Success' })
     } catch (error) {
       return res.status(500).json({ message: "Internal Server Error" })
@@ -367,7 +395,7 @@ export class UsersService {
       const findConnection = await this.messagingModel.findOne({
         users: { $all: [userId, id] }
       }).populate('messages.sender')
-        .populate('messages.receiver');        
+        .populate('messages.receiver');
       if (findConnection) {
         return res.status(200).json({ message: findConnection, userId: userId })
       } else {
