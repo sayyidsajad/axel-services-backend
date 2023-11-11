@@ -1,4 +1,3 @@
-/* eslint-disable @typescript-eslint/no-unused-vars */
 import {
   Controller,
   Get,
@@ -10,86 +9,45 @@ import {
   Patch,
   ValidationPipe,
   UsePipes,
+  UseFilters,
 } from '@nestjs/common';
 import { UsersService } from './users.service';
 import { CreateUserDto, loggedUserDto } from './dto/create-user.dto';
+import { PaymentVerificationDto } from './dto/verify-payment.dto';
 import { Response } from 'express';
+import { HttpExceptionFilter } from 'src/exceptions/http-exception.filter';
 
 @Controller()
+@UseFilters(new HttpExceptionFilter())
 export class UsersController {
-  constructor(private readonly usersService: UsersService) {}
+  constructor(private readonly _usersService: UsersService) {}
   @Post('signup')
   @UsePipes(new ValidationPipe({ transform: true }))
   async userRegister(
     @Body() createUserDto: CreateUserDto,
     @Res() res: Response,
   ) {
-    try {
-      return this.usersService.userRegister(createUserDto, res);
-    } catch (error) {
-      const { message } = error;
-      if (res.status(500)) {
-        return res.status(500).json({ message: message });
-      } else {
-        return res.status(400).json({ message: message });
-      }
-    }
+    return this._usersService.userRegister(createUserDto, res);
   }
   @Post()
   @UsePipes(new ValidationPipe({ transform: true }))
   async userLogin(@Body() user: loggedUserDto, @Res() res: Response) {
-    try {
-      return this.usersService.userLogin(user, res);
-    } catch (error) {
-      const { message } = error;
-      if (res.status(500)) {
-        return res.status(500).json({ message: message });
-      } else {
-        return res.status(400).json({ message: message });
-      }
-    }
+    return this._usersService.userLogin(user, res);
   }
   @Get('otpVerification')
   @UsePipes(new ValidationPipe({ transform: true }))
-  async sendMail(@Res() res: Response, @Query('email') email: string) {
-    try {
-      return this.usersService.sendMail(res, email);
-    } catch (error) {
-      const { message } = error;
-      if (res.status(500)) {
-        return res.status(500).json({ message: message });
-      } else {
-        return res.status(400).json({ message: message });
-      }
-    }
+  async sendMail(@Query('email') email: string, @Res() res: Response) {
+    return this._usersService.sendMail(res, email);
   }
   @Patch('home')
   @UsePipes(new ValidationPipe({ transform: true }))
   async loadHome(@Res() res: Response, @Body('email') email: string) {
-    try {
-      return this.usersService.loadHome(res, email);
-    } catch (error) {
-      const { message } = error;
-      if (res.status(500)) {
-        return res.status(500).json({ message: message });
-      } else {
-        return res.status(400).json({ message: message });
-      }
-    }
+    return this._usersService.loadHome(res, email);
   }
   @Get('logOut')
   @UsePipes(new ValidationPipe({ transform: true }))
   async logOut(@Res() res: Response) {
-    try {
-      return this.usersService.logOut(res);
-    } catch (error) {
-      const { message } = error;
-      if (res.status(500)) {
-        return res.status(500).json({ message: message });
-      } else {
-        return res.status(400).json({ message: message });
-      }
-    }
+    return this._usersService.logOut(res);
   }
   @Post('bookNow')
   @UsePipes(new ValidationPipe({ transform: true }))
@@ -101,30 +59,12 @@ export class UsersController {
     @Body('time') time: string,
     @Body('walletChecked') walletChecked: number,
   ) {
-    try {
-      return this.usersService.bookNow(req, res, id, date, time, walletChecked);
-    } catch (error) {
-      const { message } = error;
-      if (res.status(500)) {
-        return res.status(500).json({ message: message });
-      } else {
-        return res.status(400).json({ message: message });
-      }
-    }
+    return this._usersService.bookNow(req, res, id, date, time, walletChecked);
   }
   @Get('bookingsList')
   @UsePipes(new ValidationPipe({ transform: true }))
   async bookingsList(@Res() res: Response) {
-    try {
-      return this.usersService.bookingsList(res);
-    } catch (error) {
-      const { message } = error;
-      if (res.status(500)) {
-        return res.status(500).json({ message: message });
-      } else {
-        return res.status(400).json({ message: message });
-      }
-    }
+    return this._usersService.bookingsList(res);
   }
   @Patch('cancelBooked')
   @UsePipes(new ValidationPipe({ transform: true }))
@@ -132,88 +72,36 @@ export class UsersController {
     @Req() req: Request,
     @Res() res: Response,
     @Body('id') id: string,
-    @Body('amount') amount: string,
   ) {
-    try {
-      return this.usersService.cancel(req, res, id, amount);
-    } catch (error) {
-      const { message } = error;
-      if (res.status(500)) {
-        return res.status(500).json({ message: message });
-      } else {
-        return res.status(400).json({ message: message });
-      }
-    }
+    return this._usersService.cancel(req, res, id);
   }
   @Get('servicerList')
   @UsePipes(new ValidationPipe({ transform: true }))
-  async servicerList(@Req() req: Request, @Res() res: Response) {
-    try {
-      return this.usersService.servicerList(req, res);
-    } catch (error) {
-      const { message } = error;
-      if (res.status(500)) {
-        return res.status(500).json({ message: message });
-      } else {
-        return res.status(400).json({ message: message });
-      }
-    }
+  async servicerList(@Res() res: Response) {
+    return this._usersService.servicerList(res);
   }
   @Get('userInbox')
   @UsePipes(new ValidationPipe({ transform: true }))
   async userInbox(@Res() res: Response, @Req() req: Request) {
-    try {
-      return this.usersService.userInbox(res, req);
-    } catch (error) {
-      const { message } = error;
-      if (res.status(500)) {
-        return res.status(500).json({ message: message });
-      } else {
-        return res.status(400).json({ message: message });
-      }
-    }
+    return this._usersService.userInbox(res, req);
   }
   @Get('clearAll')
   @UsePipes(new ValidationPipe({ transform: true }))
   async cancelAll(@Res() res: Response, @Req() req: Request) {
-    try {
-      return this.usersService.cancelAll(res, req);
-    } catch (error) {
-      const { message } = error;
-      if (res.status(500)) {
-        return res.status(500).json({ message: message });
-      } else {
-        return res.status(400).json({ message: message });
-      }
-    }
+    return this._usersService.cancelAll(res, req);
   }
   @Get('userProfile')
   @UsePipes(new ValidationPipe({ transform: true }))
   async userProfile(@Res() res: Response, @Req() req: Request) {
-    try {
-      return this.usersService.userProfile(res, req);
-    } catch (error) {
-      const { message } = error;
-      if (res.status(500)) {
-        return res.status(500).json({ message: message });
-      } else {
-        return res.status(400).json({ message: message });
-      }
-    }
+    return this._usersService.userProfile(res, req);
   }
   @Post('verifyPayment')
   @UsePipes(new ValidationPipe({ transform: true }))
-  async verifyPayment(@Res() res: Response, @Body() data: any) {
-    try {
-      return this.usersService.verifyPayment(res, data);
-    } catch (error) {
-      const { message } = error;
-      if (res.status(500)) {
-        return res.status(500).json({ message: message });
-      } else {
-        return res.status(400).json({ message: message });
-      }
-    }
+  async verifyPayment(
+    @Res() res: Response,
+    @Body() data: PaymentVerificationDto,
+  ) {
+    return this._usersService.verifyPayment(res, data);
   }
   @Get('servicerDetails')
   @UsePipes(new ValidationPipe({ transform: true }))
@@ -222,30 +110,12 @@ export class UsersController {
     @Res() res: Response,
     @Query('id') id: string,
   ) {
-    try {
-      return this.usersService.servicerDetails(req, res, id);
-    } catch (error) {
-      const { message } = error;
-      if (res.status(500)) {
-        return res.status(500).json({ message: message });
-      } else {
-        return res.status(400).json({ message: message });
-      }
-    }
+    return this._usersService.servicerDetails(req, res, id);
   }
   @Post('forgotPassword')
   @UsePipes(new ValidationPipe({ transform: true }))
   async forgotPassword(@Res() res: Response, @Body('email') email: string) {
-    try {
-      return this.usersService.forgotPassword(res, email);
-    } catch (error) {
-      const { message } = error;
-      if (res.status(500)) {
-        return res.status(500).json({ message: message });
-      } else {
-        return res.status(400).json({ message: message });
-      }
-    }
+    return this._usersService.forgotPassword(res, email);
   }
   @Post('verifyConfirmPassword')
   @UsePipes(new ValidationPipe({ transform: true }))
@@ -255,21 +125,12 @@ export class UsersController {
     @Body('newConfirmPassword') newConfirmPassword: string,
     @Query('id') id: string,
   ) {
-    try {
-      return this.usersService.verifyConfirmPassword(
-        res,
-        id,
-        newPassword,
-        newConfirmPassword,
-      );
-    } catch (error) {
-      const { message } = error;
-      if (res.status(500)) {
-        return res.status(500).json({ message: message });
-      } else {
-        return res.status(400).json({ message: message });
-      }
-    }
+    return this._usersService.verifyConfirmPassword(
+      res,
+      id,
+      newPassword,
+      newConfirmPassword,
+    );
   }
   @Get('getRecentChats')
   @UsePipes(new ValidationPipe({ transform: true }))
@@ -278,15 +139,6 @@ export class UsersController {
     @Res() res: Response,
     @Req() req: Request,
   ) {
-    try {
-      return this.usersService.getRecentChats(id, res, req);
-    } catch (error) {
-      const { message } = error;
-      if (res.status(500)) {
-        return res.status(500).json({ message: message });
-      } else {
-        return res.status(400).json({ message: message });
-      }
-    }
+    return this._usersService.getRecentChats(id, res, req);
   }
 }

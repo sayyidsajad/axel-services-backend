@@ -1,4 +1,3 @@
-/* eslint-disable @typescript-eslint/no-unused-vars */
 import { NestFactory } from '@nestjs/core';
 import { AppModule } from './app.module';
 import { CorsOptions } from '@nestjs/common/interfaces/external/cors-options.interface';
@@ -12,12 +11,13 @@ import * as bodyParser from 'body-parser';
 import * as path from 'path';
 import { NestExpressApplication } from '@nestjs/platform-express';
 import { ValidationPipe } from '@nestjs/common';
+import { HttpExceptionFilter } from './exceptions/http-exception.filter';
 
 async function bootstrap() {
   const app = await NestFactory.create<NestExpressApplication>(AppModule);
   app.useGlobalPipes(
     new ValidationPipe({
-      // disableErrorMessages: true,
+      disableErrorMessages: true,
       whitelist: true,
       forbidNonWhitelisted: true,
       transform: true,
@@ -70,6 +70,7 @@ async function bootstrap() {
     include: [UsersModule],
   });
   SwaggerModule.setup('api', app, usersDocument);
+  app.useGlobalFilters(new HttpExceptionFilter());
   app.use(bodyParser.json({ limit: '50mb' }));
   app.use(bodyParser.urlencoded({ limit: '50mb', extended: true }));
   app.enableCors(corsOptions);

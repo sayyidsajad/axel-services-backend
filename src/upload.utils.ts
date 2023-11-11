@@ -1,4 +1,3 @@
-/* eslint-disable prettier/prettier */
 import { extname } from 'path';
 
 export const imageFileFilter = (req: any, file: any, callback: any) => {

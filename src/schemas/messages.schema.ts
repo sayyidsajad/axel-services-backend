@@ -2,20 +2,6 @@ import * as mongoose from 'mongoose';
 
 export const MessagingSchema = new mongoose.Schema(
   {
-    // connectionId: {
-    //   type: String,
-    //   required: true,
-    // },
-    // userId: {
-    //   type: mongoose.Schema.ObjectId,
-    //   ref: 'USER_MODEL',
-    //   required: true,
-    // },
-    // servicerId: {
-    //   type: mongoose.Schema.ObjectId,
-    //   ref: 'SERVICER_MODEL',
-    //   required: true,
-    // },
     users: [{ type: mongoose.Schema.Types.ObjectId }],
     userRead: { type: Boolean, default: false },
     professionalRead: { type: Boolean, default: false },

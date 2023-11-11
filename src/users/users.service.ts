@@ -1,7 +1,5 @@
-/* eslint-disable @typescript-eslint/no-unused-vars */
-/* eslint-disable prettier/prettier */
-import { Body, Inject, Injectable, Req, Res } from '@nestjs/common';
-import { CreateUserDto, bookingDto, loggedUserDto } from './dto/create-user.dto';
+import { HttpException, HttpStatus, Inject, Injectable } from '@nestjs/common';
+import { CreateUserDto, loggedUserDto } from './dto/create-user.dto';
 import { User } from './entities/user.entity';
 import { Response } from 'express';
 import mongoose, { Model } from 'mongoose';
@@ -20,36 +18,59 @@ dotenv.config();
 export class UsersService {
   constructor(
     @Inject('USER_MODEL')
-    private userModel: Model<User>,
+    private _userModel: Model<User>,
     @Inject('BOOKING_MODEL')
-    private bookingModel: Model<bookingDto>,
+    private _bookingModel: Model<any>,
     @Inject('SERVICER_MODEL')
-    private servicerModel: Model<CreateServicerDto>,
+    private _servicerModel: Model<CreateServicerDto>,
     @Inject('MESSAGING_MODEL')
-    private messagingModel: Model<any>,
-    private configService: ConfigService,
-    private jwtService: JwtService,
-    private readonly mailerService: MailerService,
-    private readonly twilioService: TwilioService
-  ) { }
-  async userRegister(createUserDto: CreateUserDto, @Res() res: Response): Promise<User> {
+    private _messagingModel: Model<any>,
+    private _configService: ConfigService,
+    private _jwtService: JwtService,
+    private readonly _mailerService: MailerService,
+    private readonly _twilioService: TwilioService,
+  ) {}
+  async userRegister(
+    createUserDto: CreateUserDto,
+    res: Response,
+  ): Promise<User> {
     try {
-      const { name, email, phone, password } = createUserDto
-      const adminEmail = this.configService.get<string>('ADMIN_EMAIL');
-      const registeredServicer = await this.servicerModel.findOne({ email: email })
-      const registered = await this.userModel.findOne({ phone: phone })
+      const { name, email, phone, password } = createUserDto;
+      const adminEmail = this._configService.get<string>('ADMIN_EMAIL');
+      const registeredServicer = await this._servicerModel.findOne({
+        email: email,
+      });
+      const registered = await this._userModel.findOne({ phone: phone });
       if (email === adminEmail) {
-        return res.status(400).json({ message: 'Admin cannot login as user' })
+        throw new HttpException(
+          'Admin cannot login as user',
+          HttpStatus.BAD_REQUEST,
+        );
       } else if (registeredServicer?.['email'] === email) {
-        return res.status(400).json({ message: 'This Email has been registered by a servicer' })
+        throw new HttpException(
+          'This Email has been registered by a servicer',
+          HttpStatus.BAD_REQUEST,
+        );
       } else if (registeredServicer?.['phone'] === +phone) {
-        return res.status(400).json({ message: 'This phone has been already registered by a servicer' })
+        throw new HttpException(
+          'This phone has been already registered by a servicer',
+          HttpStatus.CONFLICT,
+        );
       } else if (registered?.['email'] === email) {
-        return res.status(400).json({ message: 'Email has been already registered' })
+        throw new HttpException(
+          'Email has been already registered',
+          HttpStatus.CONFLICT,
+        );
       } else if (registered?.['phone'] === +phone) {
-        return res.status(400).json({ message: 'Phone has been already registered' })
+        throw new HttpException(
+          'Phone has been already registered',
+          HttpStatus.CONFLICT,
+        );
       } else if (registered?.['password'] !== registered?.['confirmPassword']) {
-        return res.status(400).json({ message: 'Password and Confirm Password do not match' })
+        throw new HttpException(
+          'Password and Confirm Password do not match',
+          HttpStatus.NOT_ACCEPTABLE,
+        );
       }
       // if (userFind['provider'] === 'GOOGLE') {
       //   const createdUser = new this.userModel({
@@ -60,8 +81,8 @@ export class UsersService {
       //   return await createdUser.save();
       // }
       const salt = await bcrypt.genSalt(10);
-      const hashedPassword = await bcrypt.hash(password, salt)
-      const createdUser = new this.userModel({
+      const hashedPassword = await bcrypt.hash(password, salt);
+      const createdUser = new this._userModel({
         name: name,
         email: email,
         phone: phone,
@@ -69,41 +90,80 @@ export class UsersService {
       });
       const userDone = await createdUser.save();
       if (userDone) {
-        const payload = { token: userDone._id, name: userDone['name'] }
-        return res.status(201).json({ access_token: await this.jwtService.sign(payload), message: 'success', email: createdUser['email'] })
+        const payload = { token: userDone._id, name: userDone['name'] };
+        return res.status(HttpStatus.CREATED).json({
+          access_token: await this._jwtService.sign(payload),
+          message: 'success',
+          email: createdUser['email'],
+        });
       } else {
-        return res.status(400).json({ message: 'Token not available' })
+        throw new HttpException('Token not available', HttpStatus.UNAUTHORIZED);
       }
     } catch (error) {
-      return res.status(500).json({ message: "Internal Server Error" })
+      if (error instanceof HttpException) {
+        return res.status(error.getStatus()).json({
+          message: error.message,
+        });
+      } else {
+        return res.status(HttpStatus.INTERNAL_SERVER_ERROR).json({
+          message: 'Internal Server Error',
+        });
+      }
     }
   }
-  async userLogin(user: loggedUserDto, @Res() res: Response): Promise<User> {
+  async userLogin(user: loggedUserDto, res: Response): Promise<User> {
     try {
-      const userFind = await this.userModel.findOne({ email: user.email })
+      const userFind = await this._userModel.findOne({ email: user.email });
       if (!userFind) {
-        return res.status(400).json({ message: 'User not found' })
+        throw new HttpException('User not found', HttpStatus.NOT_FOUND);
       }
-      const userPassword = await bcrypt.compare(user.password, userFind['password'])
+      const userPassword = await bcrypt.compare(
+        user.password,
+        userFind['password'],
+      );
       if (!userPassword) {
-        return res.status(400).json({ message: 'Password is incorrect' });
+        return res
+          .status(HttpStatus.NOT_ACCEPTABLE)
+          .json({ message: 'Password is incorrect' });
       } else if (userFind['isBlocked'] === true) {
-        return res.status(400).json({ message: 'User has been blocked by admin' });
+        return res
+          .status(HttpStatus.FORBIDDEN)
+          .json({ message: 'User has been blocked by admin' });
       }
       if (userFind['isVerified'] !== true) {
-        return res.status(200).json({ message: 'User not verified, Please verify', verified: false, email: userFind['email'] })
+        return res.status(HttpStatus.CONTINUE).json({
+          message: 'User not verified, Please verify',
+          verified: false,
+          email: userFind['email'],
+        });
       }
-      const payload = { token: userFind._id }
-      return res.status(200).json({ access_token: await this.jwtService.sign(payload), message: "Success" })
+      const payload = { token: userFind._id };
+      return res.status(HttpStatus.CREATED).json({
+        access_token: await this._jwtService.sign(payload),
+        message: 'Success',
+      });
     } catch (error) {
-      return res.status(500).json({ message: "Internal Server Error" })
+      if (error instanceof HttpException) {
+        return res.status(error.getStatus()).json({
+          message: error.message,
+        });
+      } else {
+        return res.status(HttpStatus.INTERNAL_SERVER_ERROR).json({
+          message: 'Internal Server Error',
+        });
+      }
     }
   }
-  async sendMail(@Res() res: Response, email: string) {
+  async sendMail(res: Response, email: string) {
     try {
-      const findId = await this.userModel.findOne({ email: email })
-      const otp = await otpGenerator.generate(4, { digits: true, upperCaseAlphabets: false, lowerCaseAlphabets: false, specialChars: false });
-      this.mailerService.sendMail({
+      const findId = await this._userModel.findOne({ email: email });
+      const otp = await otpGenerator.generate(4, {
+        digits: true,
+        upperCaseAlphabets: false,
+        lowerCaseAlphabets: false,
+        specialChars: false,
+      });
+      this._mailerService.sendMail({
         to: `${email}`,
         from: process.env.DEV_MAIL,
         subject: 'Axel Services Email Verification',
@@ -134,23 +194,46 @@ export class UsersService {
     </table>
     `,
       });
-      const payload = { token: findId._id }
-      return res.status(200).json({ message: 'Success', otp: otp, access_token: await this.jwtService.sign(payload) })
+      const payload = { token: findId._id };
+      return res.status(HttpStatus.CREATED).json({
+        message: 'Success',
+        otp: otp,
+        access_token: await this._jwtService.sign(payload),
+      });
     } catch (error) {
-      return res.status(500).json({ message: "Internal Server Error" })
+      if (error instanceof HttpException) {
+        return res.status(error.getStatus()).json({
+          message: error.message,
+        });
+      } else {
+        return res.status(HttpStatus.INTERNAL_SERVER_ERROR).json({
+          message: 'Internal Server Error',
+        });
+      }
     }
   }
-  async loadHome(@Res() res: Response, email: string) {
+  async loadHome(res: Response, email: string) {
     try {
-      await this.userModel.updateOne({ email: email }, { $set: { isVerified: true } })
-      return res.status(200).json({ message: 'Success' })
+      await this._userModel.updateOne(
+        { email: email },
+        { $set: { isVerified: true } },
+      );
+      return res.status(HttpStatus.CREATED).json({ message: 'Success' });
     } catch (error) {
-      return res.status(500).json({ message: "Internal Server Error" })
+      if (error instanceof HttpException) {
+        return res.status(error.getStatus()).json({
+          message: error.message,
+        });
+      } else {
+        return res.status(HttpStatus.INTERNAL_SERVER_ERROR).json({
+          message: 'Internal Server Error',
+        });
+      }
     }
   }
-  async servicerList(req: Request, @Res() res: Response) {
+  async servicerList(res: Response) {
     try {
-      const servicesFind = await this.servicerModel.aggregate([
+      const servicesFind = await this._servicerModel.aggregate([
         {
           $lookup: {
             from: 'categories',
@@ -166,51 +249,103 @@ export class UsersService {
           },
         },
       ]);
-      return res.status(200).json({ servicesFind: servicesFind });
+      return res.status(HttpStatus.OK).json({ servicesFind: servicesFind });
     } catch (error) {
-      return res.status(500).json({ message: 'Internal Server Error' });
+      if (error instanceof HttpException) {
+        return res.status(error.getStatus()).json({
+          message: error.message,
+        });
+      } else {
+        return res.status(HttpStatus.INTERNAL_SERVER_ERROR).json({
+          message: 'Internal Server Error',
+        });
+      }
     }
   }
-  async logOut(@Res() res: Response) {
+  async logOut(res: Response) {
     try {
-      return res.status(200).json({ message: 'Success' })
+      return res.status(HttpStatus.OK).json({ message: 'Success' });
     } catch (error) {
-      return res.status(500).json({ message: "Internal Server Error" })
+      if (error instanceof HttpException) {
+        return res.status(error.getStatus()).json({
+          message: error.message,
+        });
+      } else {
+        return res.status(HttpStatus.INTERNAL_SERVER_ERROR).json({
+          message: 'Internal Server Error',
+        });
+      }
     }
   }
-  async bookNow(@Req() req: Request, @Res() res: Response, id: string, date: Date, time: string, walletChecked?: number) {
+  async bookNow(
+    req: Request,
+    res: Response,
+    id: string,
+    date: Date,
+    time: string,
+    walletChecked?: number,
+  ) {
     try {
       const updatedDate = moment(date).format('DD-MM-YYYY');
       const updateTime = moment(time).format('hh:mm A');
       const authHeader = req.headers['authorization'];
       const token = authHeader.split(' ')[1];
-      const decoded = this.jwtService.verify(token);
+      const decoded = this._jwtService.verify(token);
       const userId = decoded.token;
-      const lastBookingNum = await this.bookingModel.findOne({}).sort({ createdAt: -1 })
-      const serviceAmount = await this.servicerModel.findOne({ _id: id })
-      let lastValue = lastBookingNum?.['bookingId'].slice(2, lastBookingNum?.['bookingId'].length)
-      const reducedAmt = walletChecked ? (serviceAmount['amount'] - walletChecked) : serviceAmount['amount'];
+      const lastBookingNum = await this._bookingModel
+        .findOne({})
+        .sort({ createdAt: -1 });
+      const serviceAmount = await this._servicerModel.findOne({ _id: id });
+      let lastValue = lastBookingNum?.['bookingId'].slice(
+        2,
+        lastBookingNum?.['bookingId'].length,
+      );
+      const reducedAmt = walletChecked
+        ? serviceAmount['amount'] - walletChecked
+        : serviceAmount['amount'];
       if (walletChecked) {
-        await this.userModel.updateOne({ _id: userId }, { $inc: { wallet: -walletChecked }, $push: { walletHistory: { date: new Date(), amount: walletChecked, description: 'Deducted from Wallet' } } })
+        await this._userModel.updateOne(
+          { _id: userId },
+          {
+            $inc: { wallet: -walletChecked },
+            $push: {
+              walletHistory: {
+                date: new Date(),
+                amount: walletChecked,
+                description: 'Deducted from Wallet',
+              },
+            },
+          },
+        );
       }
-      const insertBooking = new this.bookingModel({
+      const insertBooking = new this._bookingModel({
         date: updatedDate,
         time: updateTime,
         bookingId: `BK${lastValue ? ++lastValue : 1}`,
         user: userId,
         service: id,
         paymentStatus: 'Pending',
-        total: reducedAmt
-      })
-      const inserted = await insertBooking.save()
-      return res.status(200).json({ message: 'Success', inserted: inserted, reducedAmt })
+        total: reducedAmt,
+      });
+      const inserted = await insertBooking.save();
+      return res
+        .status(HttpStatus.CREATED)
+        .json({ message: 'Success', inserted: inserted, reducedAmt });
     } catch (error) {
-      return res.status(500).json({ message: "Internal Server Error" })
+      if (error instanceof HttpException) {
+        return res.status(error.getStatus()).json({
+          message: error.message,
+        });
+      } else {
+        return res.status(HttpStatus.INTERNAL_SERVER_ERROR).json({
+          message: 'Internal Server Error',
+        });
+      }
     }
   }
-  async bookingsList(@Res() res: Response) {
+  async bookingsList(res: Response) {
     try {
-      const bookings = await this.bookingModel.aggregate([
+      const bookings = await this._bookingModel.aggregate([
         {
           $lookup: {
             from: 'servicers',
@@ -225,33 +360,66 @@ export class UsersService {
             preserveNullAndEmptyArrays: true,
           },
         },
-      ])
-      return res.status(200).json({ message: 'Success', bookings: bookings })
+      ]);
+      return res
+        .status(HttpStatus.OK)
+        .json({ message: 'Success', bookings: bookings });
     } catch (error) {
-      return res.status(500).json({ message: "Internal Server Error" })
+      if (error instanceof HttpException) {
+        return res.status(error.getStatus()).json({
+          message: error.message,
+        });
+      } else {
+        return res.status(HttpStatus.INTERNAL_SERVER_ERROR).json({
+          message: 'Internal Server Error',
+        });
+      }
     }
   }
-  async cancel(req: Request, @Res() res: Response, id: string, amount: string) {
+  async cancel(req: Request, res: Response, id: string) {
     try {
       const authHeader = req.headers['authorization'];
       const token = authHeader.split(' ')[1];
-      const decoded = this.jwtService.verify(token);
+      const decoded = this._jwtService.verify(token);
       const userId = decoded.token;
-      await this.bookingModel.updateOne({ _id: id }, { $set: { approvalStatus: 'Cancelled' } })
-      const bookedAmt = await this.bookingModel.findById({ _id: id })
-      await this.userModel.updateOne({ _id: userId }, { $inc: { wallet: bookedAmt['total'] }, $push: { walletHistory: { date: new Date(), amount: bookedAmt['total'], description: 'Added to wallet on cancellation of service.' } } })
-      return res.status(201).json({ message: 'Success' })
+      await this._bookingModel.updateOne(
+        { _id: id },
+        { $set: { approvalStatus: 'Cancelled' } },
+      );
+      const bookedAmt = await this._bookingModel.findById({ _id: id });
+      await this._userModel.updateOne(
+        { _id: userId },
+        {
+          $inc: { wallet: bookedAmt['total'] },
+          $push: {
+            walletHistory: {
+              date: new Date(),
+              amount: bookedAmt['total'],
+              description: 'Added to wallet on cancellation of service.',
+            },
+          },
+        },
+      );
+      return res.status(HttpStatus.CREATED).json({ message: 'Success' });
     } catch (error) {
-      return res.status(500).json({ message: "Internal Server Error" })
+      if (error instanceof HttpException) {
+        return res.status(error.getStatus()).json({
+          message: error.message,
+        });
+      } else {
+        return res.status(HttpStatus.INTERNAL_SERVER_ERROR).json({
+          message: 'Internal Server Error',
+        });
+      }
     }
   }
-  async userInbox(@Res() res: Response, req: Request) {
+  async userInbox(res: Response, req: Request) {
     try {
       const authHeader = req.headers['authorization'];
       const token = authHeader.split(' ')[1];
-      const decoded = this.jwtService.verify(token);
+      const decoded = this._jwtService.verify(token);
       const userId = decoded.token;
-      const result = await this.userModel.aggregate([
+      const result = await this._userModel.aggregate([
         { $match: { _id: new mongoose.Types.ObjectId(userId) } },
         {
           $unwind: '$inbox',
@@ -279,137 +447,222 @@ export class UsersService {
           $unwind: '$inbox.bookingDetails.service',
         },
       ]);
-      const inboxData = result.map(user => user.inbox);
-      const serviceData = result.map(user => user.inbox.bookingDetails.service);
-      return res.status(200).json({ message: 'Success', inbox: inboxData, service: serviceData })
+      const inboxData = result.map((user) => user.inbox);
+      const serviceData = result.map(
+        (user) => user.inbox.bookingDetails.service,
+      );
+      return res
+        .status(HttpStatus.OK)
+        .json({ message: 'Success', inbox: inboxData, service: serviceData });
     } catch (error) {
-      return res.status(500).json({ message: "Internal Server Error" })
+      if (error instanceof HttpException) {
+        return res.status(error.getStatus()).json({
+          message: error.message,
+        });
+      } else {
+        return res.status(HttpStatus.INTERNAL_SERVER_ERROR).json({
+          message: 'Internal Server Error',
+        });
+      }
     }
   }
-  async cancelAll(@Res() res: Response, @Req() req: Request) {
+  async cancelAll(res: Response, req: Request) {
     try {
       const authHeader = req.headers['authorization'];
       const token = authHeader.split(' ')[1];
-      const decoded = this.jwtService.verify(token);
+      const decoded = this._jwtService.verify(token);
       const userId = decoded.token;
-      await this.userModel.updateOne({ _id: userId }, { $set: { inbox: [] } })
-      return res.status(200).json({ message: 'Success' })
+      await this._userModel.updateOne({ _id: userId }, { $set: { inbox: [] } });
+      return res.status(HttpStatus.CREATED).json({ message: 'Success' });
     } catch (error) {
-      return res.status(500).json({ message: "Internal Server Error" })
+      if (error instanceof HttpException) {
+        return res.status(error.getStatus()).json({
+          message: error.message,
+        });
+      } else {
+        return res.status(HttpStatus.INTERNAL_SERVER_ERROR).json({
+          message: 'Internal Server Error',
+        });
+      }
     }
   }
-  async verifyPayment(@Res() res: Response, @Body() data: any) {
+  async verifyPayment(res: Response, data: any) {
     try {
-      const { razorpay_payment_id } = data.res
-      const { _id } = data.inserted.inserted
+      const { razorpay_payment_id } = data.res;
+      const { _id } = data.inserted.inserted;
       if (razorpay_payment_id) {
-        await this.bookingModel.updateOne(
+        await this._bookingModel.updateOne(
           { _id: _id },
-          { $set: { paymentStatus: "Success" } }
+          { $set: { paymentStatus: 'Success' } },
         );
-        this.twilioService.client.calls.create({
+        this._twilioService.client.calls.create({
           url: 'http://demo.twilio.com/docs/voice.xml',
           from: process.env.TWILIO_PHONE_NUMBER,
           to: process.env.MY_NUMBER,
         });
-        return res.status(200).json({
-          message: "Payment success",
+        return res.status(HttpStatus.OK).json({
+          message: 'Payment success',
         });
       } else {
-        await this.bookingModel.updateOne(
+        await this._bookingModel.updateOne(
           { _id: _id },
-          { $set: { paymentStatus: "Failed" } }
+          { $set: { paymentStatus: 'Failed' } },
         );
-        return res.status(400).json({
-          message: "Payment failed",
-        });
+        throw new HttpException('Payment failed', HttpStatus.BAD_REQUEST);
       }
     } catch (error) {
-      return res.status(500).json({ message: "Internal Server Error" });
+      if (error instanceof HttpException) {
+        return res.status(error.getStatus()).json({
+          message: error.message,
+        });
+      } else {
+        return res.status(HttpStatus.INTERNAL_SERVER_ERROR).json({
+          message: 'Internal Server Error',
+        });
+      }
     }
   }
-  async userProfile(@Res() res: Response, req: Request) {
+  async userProfile(res: Response, req: Request) {
     try {
       const authHeader = req.headers['authorization'];
       const token = authHeader.split(' ')[1];
-      const decoded = await this.jwtService.verify(token);
+      const decoded = await this._jwtService.verify(token);
       const userId = decoded.token;
-      const user = await this.userModel.findOne({ _id: userId })
-      return res.status(200).json({ message: 'Success', user: user })
+      const user = await this._userModel.findOne({ _id: userId });
+      return res.status(HttpStatus.OK).json({ message: 'Success', user: user });
     } catch (error) {
-      return res.status(500).json({ message: "Internal Server Error" })
+      if (error instanceof HttpException) {
+        return res.status(error.getStatus()).json({
+          message: error.message,
+        });
+      } else {
+        return res.status(HttpStatus.INTERNAL_SERVER_ERROR).json({
+          message: 'Internal Server Error',
+        });
+      }
     }
   }
-  async servicerDetails(req: Request, @Res() res: Response, id: string) {
+  async servicerDetails(req: Request, res: Response, id: string) {
     try {
       const authHeader = req.headers['authorization'];
       const token = authHeader.split(' ')[1];
-      const decoded = await this.jwtService.verify(token);
+      const decoded = await this._jwtService.verify(token);
       const userId = decoded.token;
-      const servicesFind = await this.servicerModel.find({ _id: id })
-      const wallet = await this.userModel.findById({ _id: userId })
-      return res.status(200).json({ servicesFind, wallet: wallet['wallet'] });
+      const servicesFind = await this._servicerModel.find({ _id: id });
+      const wallet = await this._userModel.findById({ _id: userId });
+      return res
+        .status(HttpStatus.OK)
+        .json({ servicesFind, wallet: wallet?.['wallet'] });
     } catch (error) {
-      return res.status(500).json({ message: 'Internal Server Error' });
+      if (error instanceof HttpException) {
+        return res.status(error.getStatus()).json({
+          message: error.message,
+        });
+      } else {
+        return res.status(HttpStatus.INTERNAL_SERVER_ERROR).json({
+          message: 'Internal Server Error',
+        });
+      }
     }
   }
-  async forgotPassword(@Res() res: Response, email: string) {
+  async forgotPassword(res: Response, email: string) {
     try {
-      const registeredEmail = await this.userModel.findOne({ email: email })
+      const registeredEmail = await this._userModel.findOne({ email: email });
       if (registeredEmail) {
-        const resetLink = `localhost:4200/resetPassword?id=${registeredEmail['_id']}`
-        this.mailerService.sendMail({
+        const resetLink = `localhost:4200/resetPassword?id=${registeredEmail['_id']}`;
+        this._mailerService.sendMail({
           to: `${email}`,
           from: process.env.DEV_MAIL,
           subject: 'Axel Services Email Verification',
           text: 'Axel Services',
-          html: `<a>${resetLink}</a>`
-        })
-        return res.status(200).json({ message: 'Success' })
+          html: `<a>${resetLink}</a>`,
+        });
+        return res.status(HttpStatus.OK).json({ message: 'Success' });
       } else {
-        return res.status(400).json({ message: "There is no email registered in this account" });
+        throw new HttpException(
+          'There is no email registered in this account',
+          HttpStatus.NOT_FOUND,
+        );
       }
     } catch (error) {
-      return res.status(500).json({ message: 'Internal Server Error' });
+      if (error instanceof HttpException) {
+        return res.status(error.getStatus()).json({
+          message: error.message,
+        });
+      } else {
+        return res.status(HttpStatus.INTERNAL_SERVER_ERROR).json({
+          message: 'Internal Server Error',
+        });
+      }
     }
   }
-  async verifyConfirmPassword(@Res() res: Response, id: string, newPassword: string, newConfirmPassword: string) {
+  async verifyConfirmPassword(
+    res: Response,
+    id: string,
+    newPassword: string,
+    newConfirmPassword: string,
+  ) {
     try {
       if (newPassword !== newConfirmPassword) {
-        return res.status(400).json({ message: 'New Password and Confirm New Password do not match' });
+        return res.status(HttpStatus.NOT_ACCEPTABLE).json({
+          message: 'New Password and Confirm New Password do not match',
+        });
       }
       const salt = await bcrypt.genSalt(10);
-      const hashedPassword = await bcrypt.hash(newPassword, salt)
-      await this.userModel.updateOne({ _id: id }, { $set: { password: hashedPassword } })
-      return res.status(200).json({ message: 'Success' });
+      const hashedPassword = await bcrypt.hash(newPassword, salt);
+      await this._userModel.updateOne(
+        { _id: id },
+        { $set: { password: hashedPassword } },
+      );
+      return res.status(HttpStatus.CREATED).json({ message: 'Success' });
     } catch (error) {
-      return res.status(500).json({ message: 'Internal Server Error' });
+      if (error instanceof HttpException) {
+        return res.status(error.getStatus()).json({
+          message: error.message,
+        });
+      } else {
+        return res.status(HttpStatus.INTERNAL_SERVER_ERROR).json({
+          message: 'Internal Server Error',
+        });
+      }
     }
   }
   async getRecentChats(id: string, res: Response, req: Request) {
     try {
       const authHeader = req.headers['authorization'];
       const token = authHeader.split(' ')[1];
-      const decoded = await this.jwtService.verify(token);
+      const decoded = await this._jwtService.verify(token);
       const userId = decoded.token;
-      const findConnection = await this.messagingModel.findOne({
-        users: { $all: [userId, id] }
-      }).populate('messages.sender')
+      const findConnection = await this._messagingModel
+        .findOne({
+          users: { $all: [userId, id] },
+        })
+        .populate('messages.sender')
         .populate('messages.receiver');
       if (findConnection) {
-        return res.status(200).json({ message: findConnection, userId: userId })
+        return res
+          .status(HttpStatus.OK)
+          .json({ message: findConnection, userId: userId });
       } else {
-        const newRoom = new this.messagingModel({
-          users: [
-            userId, id
-          ]
-        })
+        const newRoom = new this._messagingModel({
+          users: [userId, id],
+        });
         newRoom.save().then((data: any) => {
-          return res.status(200).json({ userId: userId, message: data })
-        })
+          return res
+            .status(HttpStatus.CREATED)
+            .json({ userId: userId, message: data });
+        });
       }
     } catch (error) {
-      return res.status(500).json({ message: 'Internal Server Error' });
+      if (error instanceof HttpException) {
+        return res.status(error.getStatus()).json({
+          message: error.message,
+        });
+      } else {
+        return res.status(HttpStatus.INTERNAL_SERVER_ERROR).json({
+          message: 'Internal Server Error',
+        });
+      }
     }
   }
 }

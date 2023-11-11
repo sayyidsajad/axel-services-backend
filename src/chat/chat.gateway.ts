@@ -18,7 +18,7 @@ dotenv.config();
 export class ChatGateway {
   @WebSocketServer()
   server: Server;
-  constructor(private readonly chatService: ChatService) {}
+  constructor(private readonly _chatService: ChatService) {}
   @SubscribeMessage('connection')
   async handleConnection(client: Socket) {
     if (!client) {
@@ -36,10 +36,11 @@ export class ChatGateway {
   ) {
     client.join(roomName.Roomid);
     client.broadcast.to(roomName.Roomid).emit('member-joined');
+    console.log(client.rooms);
   }
   @SubscribeMessage('new-message')
   async handleNewMessage(@MessageBody() data: any) {
-    const newMessage = await this.chatService.newMessage(data);
+    const newMessage = await this._chatService.newMessage(data);
     this.server.to(data.id).emit('new-message', newMessage);
   }
 }

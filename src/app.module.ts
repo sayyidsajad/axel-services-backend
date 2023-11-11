@@ -1,4 +1,3 @@
-/* eslint-disable @typescript-eslint/no-unused-vars */
 import { MiddlewareConsumer, Module, NestModule } from '@nestjs/common';
 import { AppController } from './app.controller';
 import { AppService } from './app.service';
@@ -16,6 +15,8 @@ import { JwtModule } from '@nestjs/jwt';
 import { excluded } from './auth/exclude.auth';
 import { MulterModule } from '@nestjs/platform-express';
 import { ChatModule } from './chat/chat.module';
+import { HttpExceptionFilter } from './exceptions/http-exception.filter';
+import { APP_FILTER } from '@nestjs/core';
 
 dotenv.config();
 
@@ -59,7 +60,13 @@ dotenv.config();
     ChatModule,
   ],
   controllers: [AppController],
-  providers: [AppService],
+  providers: [
+    AppService,
+    {
+      provide: APP_FILTER,
+      useClass: HttpExceptionFilter,
+    },
+  ],
 })
 export class AppModule implements NestModule {
   configure(consumer: MiddlewareConsumer) {
