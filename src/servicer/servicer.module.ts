@@ -9,12 +9,14 @@ import { usersProviders } from 'src/users/users.providers';
 import { categoryProviders } from 'src/admin/admin-category.providers';
 import { bookingProviders } from 'src/admin/admin.providers';
 import { messagingsProviders } from 'src/chat/chat.providers';
+import { ServicerRepository } from 'src/repositories/base/servicer.repository';
 
 @Module({
   imports: [DatabaseModule, CloudinaryModule, ConfigModule],
   controllers: [ServicerController],
   providers: [
     ServicerService,
+    ServicerRepository,
     ...servicerProviders,
     ...categoryProviders,
     ...bookingProviders,

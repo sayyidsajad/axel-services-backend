@@ -36,7 +36,6 @@ export class ChatGateway {
   ) {
     client.join(roomName.Roomid);
     client.broadcast.to(roomName.Roomid).emit('member-joined');
-    console.log(client.rooms);
   }
   @SubscribeMessage('new-message')
   async handleNewMessage(@MessageBody() data: any) {

@@ -1,4 +1,11 @@
-import { IsEmail, IsNotEmpty, IsNumber, IsString } from 'class-validator';
+import {
+  IsEmail,
+  IsNotEmpty,
+  IsNumber,
+  IsNumberString,
+  IsOptional,
+  IsString,
+} from 'class-validator';
 
 export class CreateServicerDto {
   @IsNotEmpty()
@@ -33,13 +40,13 @@ export class servicerProcedures {
   @IsString()
   @IsNotEmpty()
   description: string;
-  @IsNumber()
+  @IsNumberString()
   @IsNotEmpty()
-  amount: number;
+  amount: string;
+
   @IsString()
   @IsNotEmpty()
   category: string;
-  @IsString()
-  @IsNotEmpty()
+  @IsOptional()
   file: Express.Multer.File;
 }

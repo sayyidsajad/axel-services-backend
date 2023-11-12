@@ -1,8 +1,6 @@
-/* eslint-disable @typescript-eslint/no-unused-vars */
 import {
   HttpException,
   HttpStatus,
-  Inject,
   Injectable,
   Res,
   UploadedFile,
@@ -11,8 +9,6 @@ import {
   CreateServicerDto,
   servicerProcedures,
 } from './dto/create-servicer.dto';
-import { Servicer } from './entities/servicer.entity';
-import mongoose, { Model } from 'mongoose';
 import { Response } from 'express';
 import * as bcrypt from 'bcrypt';
 import { loggedUserDto } from 'src/users/dto/create-user.dto';
@@ -22,22 +18,14 @@ import { MailerService } from '@nestjs-modules/mailer';
 import { CloudinaryService } from 'src/cloudinary/cloudinary.service';
 import * as dotenv from 'dotenv';
 import { ConfigService } from '@nestjs/config';
+import { ServicerRepository } from 'src/repositories/base/servicer.repository';
 dotenv.config();
 
 @Injectable()
 export class ServicerService {
   constructor(
-    @Inject('SERVICER_MODEL')
-    private _servicerModel: Model<Servicer>,
-    @Inject('CATEGORY_MODEL')
-    private _categoryModel: Model<any>,
-    @Inject('BOOKING_MODEL')
-    private _bookingModel: Model<any>,
-    @Inject('USER_MODEL')
-    private _userModel: Model<any>,
-    @Inject('MESSAGING_MODEL')
-    private _messagingModel: Model<any>,
     private _jwtService: JwtService,
+    private _servicerRepository: ServicerRepository,
     private readonly _mailerService: MailerService,
     private _cloudinary: CloudinaryService,
     private _configService: ConfigService,
@@ -49,10 +37,9 @@ export class ServicerService {
     try {
       const { companyName, email, password, phone } = createServicerDto;
       const adminEmail = this._configService.get<string>('ADMIN_EMAIL');
-      const createdServicer = await this._servicerModel.findOne({
-        email: email,
-      });
-      const createdUser = await this._userModel.findOne({ email: email });
+      const createdServicer =
+        await this._servicerRepository.servicerFindEmail(email);
+      const createdUser = await this._servicerRepository.userFindEmail(email);
       if (adminEmail === email) {
         return res
           .status(HttpStatus.UNPROCESSABLE_ENTITY)
@@ -79,18 +66,17 @@ export class ServicerService {
       if (!createdServicer) {
         const salt = await bcrypt.genSalt(10);
         const hashedPassword = await bcrypt.hash(password, salt);
-        const newServicer = new this._servicerModel({
-          companyName: companyName,
-          email: email,
-          phone: phone,
-          password: hashedPassword,
-        });
-        const savedServicer = await newServicer.save();
-        const payload = { token: savedServicer._id };
+        const newServicer = this._servicerRepository.createServicer(
+          companyName,
+          email,
+          phone,
+          hashedPassword,
+        );
+        const payload = { token: newServicer['_id'] };
         return res.status(HttpStatus.CREATED).json({
           access_token: await this._jwtService.sign(payload),
           message: 'Success',
-          id: savedServicer._id,
+          id: newServicer['_id'],
         });
       } else {
         return res
@@ -112,7 +98,8 @@ export class ServicerService {
   async servicerLogin(loggedServicer: loggedUserDto, @Res() res: Response) {
     try {
       const { email, password } = loggedServicer;
-      const searchEmail = await this._servicerModel.findOne({ email: email });
+      const searchEmail =
+        await this._servicerRepository.servicerFindEmail(email);
       if (!searchEmail) {
         throw new HttpException(
           "Email hasn't registered",
@@ -133,7 +120,7 @@ export class ServicerService {
           HttpStatus.BAD_REQUEST,
         );
       }
-      const payload = { token: searchEmail._id };
+      const payload = { token: searchEmail['_id'] };
       res.status(HttpStatus.OK).json({
         access_token: await this._jwtService.sign(payload),
         message: 'Successfully Logged In',
@@ -156,28 +143,22 @@ export class ServicerService {
   }
 
   async servicerProcedures(
-    servicerProcedures: servicerProcedures,
+    data: servicerProcedures,
     @Res() res: Response,
     @UploadedFile() file: Express.Multer.File,
     id: string,
   ) {
     try {
-      const { serviceName, description, amount, category } = servicerProcedures;
+      const { serviceName, description, amount, category } = data;
       if (servicerProcedures['file']) {
-        const categoryId = await this._categoryModel.findOne({
-          categoryName: category,
-        });
-        await this._servicerModel.updateOne(
-          { _id: new mongoose.Types.ObjectId(id) },
-          {
-            $set: {
-              serviceName: serviceName,
-              description: description,
-              category: categoryId._id,
-              amount: amount,
-              isApproved: false,
-            },
-          },
+        const categoryId =
+          await this._servicerRepository.categoryFind(category);
+        await this._servicerRepository.servicerProceduresUpdate(
+          id,
+          serviceName,
+          description,
+          categoryId['_id'],
+          amount,
         );
         const payload = { token: id };
         res.status(HttpStatus.ACCEPTED).json({
@@ -204,22 +185,7 @@ export class ServicerService {
   }
   async servicerDashboard(@Res() res: Response) {
     try {
-      const servicesFind = await this._servicerModel.aggregate([
-        {
-          $lookup: {
-            from: 'categories',
-            localField: 'category',
-            foreignField: '_id',
-            as: 'categoryInfo',
-          },
-        },
-        {
-          $unwind: {
-            path: '$categoryInfo',
-            preserveNullAndEmptyArrays: true,
-          },
-        },
-      ]);
+      const servicesFind = await this._servicerRepository.servicerDashboard();
       return res.status(HttpStatus.OK).json({ servicesFind });
     } catch (error) {
       if (error instanceof HttpException) {
@@ -235,7 +201,7 @@ export class ServicerService {
   }
   async servicerDetails(@Res() res: Response, id: string) {
     try {
-      const servicesFind = await this._servicerModel.find({ _id: id });
+      const servicesFind = await this._servicerRepository.servicerDetails(id);
       return res.status(HttpStatus.OK).json({ servicesFind });
     } catch (error) {
       if (error instanceof HttpException) {
@@ -251,7 +217,7 @@ export class ServicerService {
   }
   async servicersApproval(@Res() res: Response) {
     try {
-      const servicesFind = await this._servicerModel.find({});
+      const servicesFind = await this._servicerRepository.serviceFindAll();
       return res
         .status(HttpStatus.OK)
         .json({ message: 'Success', approvals: servicesFind });
@@ -267,12 +233,9 @@ export class ServicerService {
       }
     }
   }
-  async approveServicer(id: string, @Res() res: Response) {
+  async approveServicer(@Res() res: Response) {
     try {
-      const servicesFind = await this._servicerModel.find(
-        {},
-        { isApproved: false },
-      );
+      const servicesFind = await this._servicerRepository.approveServicer();
       return res
         .status(HttpStatus.OK)
         .json({ message: 'Success', approvals: servicesFind });
@@ -290,7 +253,7 @@ export class ServicerService {
   }
   async sendMail(@Res() res: Response, id: string) {
     try {
-      const findEmail = await this._servicerModel.findById({ _id: id });
+      const findEmail = await this._servicerRepository.servicerFindId(id);
       const otp = await otpGenerator.generate(4, {
         digits: true,
         upperCaseAlphabets: false,
@@ -343,12 +306,8 @@ export class ServicerService {
   }
   async loadDashboard(@Res() res: Response, id: string) {
     try {
-      await this._servicerModel.updateOne(
-        { _id: id },
-        { $set: { isVerified: true } },
-      );
+      await this._servicerRepository.loadDashboard(id);
       const payload = { token: id };
-
       return res.status(HttpStatus.ACCEPTED).json({
         access_token: await this._jwtService.sign(payload),
         message: 'Success',
@@ -367,7 +326,7 @@ export class ServicerService {
   }
   async categoriesList(@Res() res: Response) {
     try {
-      const categories = await this._categoryModel.find({});
+      const categories = await this._servicerRepository.categoriesList();
       return res
         .status(HttpStatus.OK)
         .json({ message: 'Success', categories: categories });
@@ -385,21 +344,7 @@ export class ServicerService {
   }
   async listBookings(@Res() res: Response) {
     try {
-      const listBookings = await this._bookingModel.aggregate([
-        {
-          $lookup: {
-            from: 'servicers',
-            localField: 'service',
-            foreignField: '_id',
-            as: 'services',
-          },
-        },
-        {
-          $unwind: {
-            path: '$services',
-          },
-        },
-      ]);
+      const listBookings = await this._servicerRepository.bookingsList();
       return res
         .status(HttpStatus.OK)
         .json({ message: 'Success', bookings: listBookings });
@@ -417,17 +362,11 @@ export class ServicerService {
   }
   async approveBooking(@Res() res: Response, id: string) {
     try {
-      const booked = await this._bookingModel.findById({ _id: id });
+      const booked = await this._servicerRepository.bookingFindId(id);
       if (booked['approvalStatus'] === 'Pending') {
-        await this._bookingModel.updateOne(
-          { _id: id },
-          { $set: { approvalStatus: 'Approved' } },
-        );
+        await this._servicerRepository.bookingApprovalStatus(id, 'Approved');
       } else {
-        await this._bookingModel.updateOne(
-          { _id: id },
-          { $set: { approvalStatus: 'Cancelled' } },
-        );
+        await this._servicerRepository.bookingApprovalStatus(id, 'Cancelled');
       }
       return res.status(HttpStatus.ACCEPTED).json({ message: 'Success' });
     } catch (error) {
@@ -464,21 +403,11 @@ export class ServicerService {
     userId: string,
   ) {
     try {
-      await this._bookingModel.updateOne(
-        { _id: bookingId },
-        { $set: { approvalStatus: 'Cancelled' } },
+      await this._servicerRepository.bookingApprovalStatus(
+        bookingId,
+        'Cancelled',
       );
-      await this._userModel.updateOne(
-        { _id: userId },
-        {
-          $push: {
-            inbox: {
-              cancelReason: textArea,
-              bookingId: new mongoose.Types.ObjectId(bookingId),
-            },
-          },
-        },
-      );
+      await this._servicerRepository.cancelBooking(userId, textArea, bookingId);
       return res.status(HttpStatus.ACCEPTED).json({ message: 'Success' });
     } catch (error) {
       if (error instanceof HttpException) {
@@ -498,12 +427,8 @@ export class ServicerService {
       const token = authHeader.split(' ')[1];
       const decoded = await this._jwtService.verify(token);
       const servicerId = decoded.token;
-      const findConnection = await this._messagingModel
-        .findOne({
-          users: { $in: [servicerId] },
-        })
-        .populate('messages.sender')
-        .populate('messages.receiver');
+      const findConnection =
+        await this._servicerRepository.findConnection(servicerId);
       const userSenderTypes = findConnection.messages
         .filter((message) => message.senderType === 'User')
         .map((message) => ({
@@ -535,12 +460,10 @@ export class ServicerService {
       const token = authHeader.split(' ')[1];
       const decoded = await this._jwtService.verify(token);
       const servicerId = decoded.token;
-      const findConnection = await this._messagingModel
-        .findOne({
-          users: { $all: [servicerId, id] },
-        })
-        .populate('messages.sender')
-        .populate('messages.receiver');
+      const findConnection = await this._servicerRepository.recentChats(
+        servicerId,
+        id,
+      );
       if (findConnection) {
         return res.status(HttpStatus.OK).json({
           message: findConnection,
@@ -548,10 +471,8 @@ export class ServicerService {
           id: findConnection._id,
         });
       } else {
-        const newRoom = new this._messagingModel({
-          users: [servicerId, id],
-        });
-        newRoom.save().then((data: any) => {
+        const newRoom = this._servicerRepository.createRoom(servicerId, id);
+        newRoom.then((data: any) => {
           return res
             .status(HttpStatus.ACCEPTED)
             .json({ message: data, servicerId: servicerId, id: data._id });
@@ -575,37 +496,28 @@ export class ServicerService {
       const token = authHeader.split(' ')[1];
       const decoded = await this._jwtService.verify(token);
       const servicerId = decoded.token;
-      const pending = await this._bookingModel
-        .find({ service: servicerId, approvalStatus: 'Pending' })
-        .count();
-      const cancelled = await this._bookingModel
-        .find({ service: servicerId, approvalStatus: 'Cancelled' })
-        .count();
-      const serviceCompleted = await this._bookingModel
-        .find({ service: servicerId, approvalStatus: 'Service Completed' })
-        .count();
+      const pending = await this._servicerRepository.bookingStatusCount(
+        servicerId,
+        'Pending',
+      );
+      const cancelled = await this._servicerRepository.bookingStatusCount(
+        servicerId,
+        'Cancelled',
+      );
+      const serviceCompleted =
+        await this._servicerRepository.bookingStatusCount(
+          servicerId,
+          'Service Completed',
+        );
       const currentSalesYear = new Date(new Date().getFullYear(), 0, 1);
       const sales = [];
-      const salesByYear = await this._bookingModel.aggregate([
-        {
-          $match: {
-            service: new mongoose.Types.ObjectId(servicerId),
-            createdAt: { $gte: currentSalesYear },
-            approvalStatus: { $ne: 'Cancelled' },
-          },
-        },
-        {
-          $group: {
-            _id: { $dateToString: { format: '%m', date: '$createdAt' } },
-            total: { $sum: '$total' },
-            count: { $sum: 1 },
-          },
-        },
-        { $sort: { _id: 1 } },
-      ]);
+      const salesByYear = await this._servicerRepository.salesByYear(
+        servicerId,
+        currentSalesYear,
+      );
       for (let i = 1; i <= 12; i++) {
         let result = true;
-        for (let j = 0; j < salesByYear.length; j++) {
+        for (let j = 0; j < salesByYear['length']; j++) {
           result = false;
           if (salesByYear[j]._id == i) {
             sales.push(salesByYear[j]);

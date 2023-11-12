@@ -9,6 +9,7 @@ import * as dotenv from 'dotenv';
 import { bookingProviders } from 'src/admin/admin.providers';
 import { TwilioModule } from 'nestjs-twilio';
 import { messagingsProviders } from 'src/chat/chat.providers';
+import { UserRepository } from 'src/repositories/base/user.repository';
 dotenv.config();
 
 @Module({
@@ -27,6 +28,7 @@ dotenv.config();
     ...bookingProviders,
     ...servicerProviders,
     ...messagingsProviders,
+    UserRepository,
   ],
   exports: [UsersService],
 })

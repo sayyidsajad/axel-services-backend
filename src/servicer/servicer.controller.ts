@@ -22,7 +22,20 @@ import {
 import { Response } from 'express';
 import { FileInterceptor } from '@nestjs/platform-express';
 import { HttpExceptionFilter } from 'src/exceptions/http-exception.filter';
-
+import { diskStorage } from 'multer';
+import { extname } from 'path';
+const storage = diskStorage({
+  destination: './uploads',
+  filename: (req, file, cb) => {
+    const name = file.originalname.split('.')[0];
+    const extension = extname(file.originalname);
+    const randomName = Array(32)
+      .fill(null)
+      .map(() => Math.round(Math.random() * 16).toString(16))
+      .join('');
+    cb(null, `${name}-${randomName}${extension}`);
+  },
+});
 @Controller('servicer')
 @UseFilters(new HttpExceptionFilter())
 export class ServicerController {
@@ -37,19 +50,17 @@ export class ServicerController {
   }
   @Post('servicerProcedures')
   @UsePipes(new ValidationPipe({ transform: true }))
-  @UseInterceptors(FileInterceptor('file'))
+  @UseInterceptors(FileInterceptor('img', { storage }))
   async servicerProcedures(
-    @Body() servicerProcedures: servicerProcedures,
-    @UploadedFile() file: Express.Multer.File,
+    @Body() data: servicerProcedures,
     @Res() res: Response,
     @Query('id') id: string,
+    @UploadedFile() file: Express.Multer.File,
   ) {
-    return this._servicerService.servicerProcedures(
-      servicerProcedures,
-      res,
-      file,
-      id,
-    );
+    console.log(data, 'in');
+
+    console.log(file);
+    return this._servicerService.servicerProcedures(data, res, file, id);
   }
   @Post()
   @UsePipes(new ValidationPipe({ transform: true }))

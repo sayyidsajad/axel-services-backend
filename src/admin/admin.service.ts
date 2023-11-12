@@ -1,38 +1,22 @@
-import {
-  HttpException,
-  HttpStatus,
-  Inject,
-  Injectable,
-  Res,
-} from '@nestjs/common';
+import { HttpException, HttpStatus, Injectable, Res } from '@nestjs/common';
 import { CreateAdminDto } from './dto/create-admin.dto';
 import { ConfigService } from '@nestjs/config';
 import { Response } from 'express';
 import { JwtService } from '@nestjs/jwt';
-import { Servicer } from 'src/servicer/entities/servicer.entity';
-import mongoose, { Model } from 'mongoose';
 import { MailerService } from '@nestjs-modules/mailer';
 import * as otpGenerator from 'otp-generator';
-import { User } from 'src/users/entities/user.entity';
-import { Category } from './entities/admin-category.entity';
 import { CategoryAdminDto } from './dto/admin-category.dto';
 import * as dotenv from 'dotenv';
+import { AdminRepository } from 'src/repositories/base/admin.repository';
 dotenv.config();
 
 @Injectable()
 export class AdminService {
   constructor(
-    @Inject('SERVICER_MODEL')
-    private _servicerModel: Model<Servicer>,
-    @Inject('USER_MODEL')
-    private _userModel: Model<User>,
-    @Inject('CATEGORY_MODEL')
-    private _categoryModel: Model<Category>,
-    @Inject('BOOKING_MODEL')
-    private _bookingModel: Model<any>,
     private _configService: ConfigService,
     private _jwtService: JwtService,
     private readonly _mailerService: MailerService,
+    private _adminRepository: AdminRepository,
   ) {}
   async adminLogin(createAdminDto: CreateAdminDto, @Res() res: Response) {
     try {
@@ -71,21 +55,15 @@ export class AdminService {
   }
   async approveServicer(id: string, @Res() res: Response) {
     try {
-      const findApproved = await this._servicerModel.findById({ _id: id });
+      const findApproved = await this._adminRepository.servicerFindId(id);
       if (findApproved['isApproved'] === true) {
-        await this._servicerModel.updateOne(
-          { _id: id },
-          { $set: { isApproved: false } },
-        );
+        await this._adminRepository.servicerApproval(id, false);
         return res
           .status(HttpStatus.ACCEPTED)
           .json({ message: 'Not Approved' });
       }
-      await this._servicerModel.updateOne(
-        { _id: id },
-        { $set: { isApproved: true } },
-      );
-      const servicerEmail = await this._servicerModel.findById({ _id: id });
+      await this._adminRepository.servicerApproval(id, true);
+      const servicerEmail = await this._adminRepository.servicerFindId(id);
       if (servicerEmail['isApproved'] === true) {
         const otp = await otpGenerator.generate(4, {
           digits: true,
@@ -100,10 +78,7 @@ export class AdminService {
           text: 'Axel Services',
           html: `<h1>Welcome Servicer, Please enter the OTP to move Further! <b>${otp}</b> </h1>`,
         });
-        const altCode = await this._servicerModel.updateOne(
-          { _id: id },
-          { $set: { altCode: otp } },
-        );
+        const altCode = await this._adminRepository.altCode(id, otp);
         return res
           .status(HttpStatus.ACCEPTED)
           .json({ message: 'Success', altCode: altCode });
@@ -122,7 +97,7 @@ export class AdminService {
   }
   async servicersApproval(@Res() res: Response) {
     try {
-      const servicesFind = await this._servicerModel.find({});
+      const servicesFind = await this._adminRepository.servicerFindAll();
       return res
         .status(HttpStatus.OK)
         .json({ message: 'Success', approvals: servicesFind });
@@ -140,9 +115,9 @@ export class AdminService {
   }
   async cancelApproval(id: string, @Res() res: Response) {
     try {
-      const servicesApproved = await this._servicerModel.updateOne(
-        { _id: id },
-        { $set: { isApproved: false } },
+      const servicesApproved = await this._adminRepository.servicerApproval(
+        id,
+        false,
       );
       return res
         .status(HttpStatus.ACCEPTED)
@@ -161,7 +136,7 @@ export class AdminService {
   }
   async userMgt(@Res() res: Response) {
     try {
-      const users = await this._userModel.find({});
+      const users = await this._adminRepository.usersFindAll();
       res.status(HttpStatus.OK).json({ message: 'Success', users: users });
     } catch (error) {
       if (error instanceof HttpException) {
@@ -177,18 +152,12 @@ export class AdminService {
   }
   async blockUnblockUser(@Res() res: Response, id: string) {
     try {
-      const findBlock = await this._userModel.findById({ _id: id });
+      const findBlock = await this._adminRepository.userFindId(id);
       if (findBlock['isBlocked'] === true) {
-        await this._userModel.updateOne(
-          { _id: id },
-          { $set: { isBlocked: false } },
-        );
+        await this._adminRepository.blockUpdate(id, false);
         return res.status(HttpStatus.ACCEPTED).json({ message: 'Unblocked' });
       }
-      await this._userModel.updateOne(
-        { _id: id },
-        { $set: { isBlocked: true } },
-      );
+      await this._adminRepository.blockUpdate(id, true);
       return res.status(HttpStatus.ACCEPTED).json({ message: 'Blocked' });
     } catch (error) {
       if (error instanceof HttpException) {
@@ -205,11 +174,7 @@ export class AdminService {
   async addCategory(res: Response, category: CategoryAdminDto) {
     try {
       const { categoryName, description } = category;
-      const newCategory = new this._categoryModel({
-        categoryName: categoryName,
-        description: description,
-      });
-      await newCategory.save();
+      await this._adminRepository.createCategory(categoryName, description);
       return res.status(HttpStatus.CREATED).json({ message: 'Success' });
     } catch (error) {
       if (error instanceof HttpException) {
@@ -225,7 +190,7 @@ export class AdminService {
   }
   async listCategory(@Res() res: Response) {
     try {
-      const listCategories = await this._categoryModel.find({});
+      const listCategories = await this._adminRepository.categoryFindAll();
       return res
         .status(HttpStatus.OK)
         .json({ message: 'Success', categories: listCategories });
@@ -243,21 +208,7 @@ export class AdminService {
   }
   async listBookings(@Res() res: Response) {
     try {
-      const listBookings = await this._bookingModel.aggregate([
-        {
-          $lookup: {
-            from: 'servicers',
-            localField: 'service',
-            foreignField: '_id',
-            as: 'services',
-          },
-        },
-        {
-          $unwind: {
-            path: '$services',
-          },
-        },
-      ]);
+      const listBookings = await this._adminRepository.bookingFindAll();
       return res
         .status(HttpStatus.OK)
         .json({ message: 'Success', bookings: listBookings });
@@ -290,18 +241,12 @@ export class AdminService {
   }
   async listUnlist(@Res() res: Response, id: string) {
     try {
-      const listCheck = await this._categoryModel.find({ _id: id });
+      const listCheck = await this._adminRepository.categoryFind(id);
       if (listCheck[0]['list'] === true) {
-        await this._categoryModel.updateOne(
-          { _id: id },
-          { $set: { list: false } },
-        );
+        await this._adminRepository.categoryListUpdate(id, false);
         return res.status(HttpStatus.ACCEPTED).json({ message: 'Unlisted' });
       } else {
-        await this._categoryModel.updateOne(
-          { _id: id },
-          { $set: { list: true } },
-        );
+        await this._adminRepository.categoryListUpdate(id, true);
       }
       return res.status(HttpStatus.ACCEPTED).json({ message: 'Listed' });
     } catch (error) {
@@ -323,20 +268,11 @@ export class AdminService {
     userId: string,
   ) {
     try {
-      await this._bookingModel.updateOne(
-        { _id: bookingId },
-        { $set: { approvalStatus: 'Cancelled' } },
-      );
-      await this._userModel.updateOne(
-        { _id: userId },
-        {
-          $push: {
-            inbox: {
-              cancelReason: textArea,
-              bookingId: new mongoose.Types.ObjectId(bookingId),
-            },
-          },
-        },
+      await this._adminRepository.cancelBooking(bookingId);
+      await this._adminRepository.cancelReasonUpdate(
+        userId,
+        textArea,
+        bookingId,
       );
       return res.status(HttpStatus.ACCEPTED).json({ message: 'Success' });
     } catch (error) {
@@ -353,7 +289,7 @@ export class AdminService {
   }
   async listServices(@Res() res: Response) {
     try {
-      const listServices = await this._servicerModel.find({});
+      const listServices = await this._adminRepository.servicerFindAll();
       return res
         .status(HttpStatus.OK)
         .json({ message: 'Success', services: listServices });
@@ -371,18 +307,12 @@ export class AdminService {
   }
   async blockServicer(@Res() res: Response, id: string) {
     try {
-      const findServicer = await this._servicerModel.findById({ _id: id });
+      const findServicer = await this._adminRepository.servicerFindId(id);
       if (findServicer['isBlocked']) {
-        await this._servicerModel.updateOne(
-          { _id: id },
-          { $set: { isBlocked: false } },
-        );
+        await this._adminRepository.servicerBlock(id, false);
         return res.status(HttpStatus.ACCEPTED).json({ message: 'Unblocked' });
       } else {
-        await this._servicerModel.updateOne(
-          { _id: id },
-          { $set: { isBlocked: true } },
-        );
+        await this._adminRepository.servicerBlock(id, true);
       }
       return res.status(HttpStatus.ACCEPTED).json({ message: 'Blocked' });
     } catch (error) {
@@ -404,10 +334,7 @@ export class AdminService {
     description: string,
   ) {
     try {
-      await this._categoryModel.updateOne(
-        { _id: id },
-        { $set: { categoryName: categoryName, description: description } },
-      );
+      await this._adminRepository.categoryUpdate(id, categoryName, description);
       return res.status(HttpStatus.ACCEPTED).json({ message: 'Success' });
     } catch (error) {
       if (error instanceof HttpException) {
@@ -423,15 +350,11 @@ export class AdminService {
   }
   async dashboardReports(res: Response) {
     try {
-      const pending = await this._bookingModel
-        .find({ approvalStatus: 'Pending' })
-        .count();
-      const cancelled = await this._bookingModel
-        .find({ approvalStatus: 'Cancelled' })
-        .count();
-      const serviceCompleted = await this._bookingModel
-        .find({ approvalStatus: 'Service Completed' })
-        .count();
+      const pending = await this._adminRepository.bookingStatusCount('Pending');
+      const cancelled =
+        await this._adminRepository.bookingStatusCount('Cancelled');
+      const serviceCompleted =
+        await this._adminRepository.bookingStatusCount('Service Completed');
       return res.status(HttpStatus.OK).json({
         message: 'Success',
         approvalStatus: { pending, cancelled, serviceCompleted },

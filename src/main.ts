@@ -7,11 +7,11 @@ import { ConfigService } from '@nestjs/config';
 import { UsersModule } from './users/users.module';
 import { AdminModule } from './admin/admin.module';
 import { ServicerModule } from './servicer/servicer.module';
-import * as bodyParser from 'body-parser';
 import * as path from 'path';
 import { NestExpressApplication } from '@nestjs/platform-express';
 import { ValidationPipe } from '@nestjs/common';
 import { HttpExceptionFilter } from './exceptions/http-exception.filter';
+import * as express from 'express';
 
 async function bootstrap() {
   const app = await NestFactory.create<NestExpressApplication>(AppModule);
@@ -27,6 +27,8 @@ async function bootstrap() {
   app.useStaticAssets(path.join(__dirname, '../upload'));
   const port = configService.get('PORT');
   const clientHost = configService.get('CLIENT_HOST');
+  app.use(express.json({ limit: '50mb' }));
+  app.use(express.urlencoded({ limit: '50mb', extended: true }));
   app.use(
     session({
       secret: process.env.SECRET,
@@ -71,8 +73,6 @@ async function bootstrap() {
   });
   SwaggerModule.setup('api', app, usersDocument);
   app.useGlobalFilters(new HttpExceptionFilter());
-  app.use(bodyParser.json({ limit: '50mb' }));
-  app.use(bodyParser.urlencoded({ limit: '50mb', extended: true }));
   app.enableCors(corsOptions);
   await app.listen(port);
 }
