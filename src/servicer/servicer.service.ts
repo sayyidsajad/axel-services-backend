@@ -66,7 +66,7 @@ export class ServicerService {
       if (!createdServicer) {
         const salt = await bcrypt.genSalt(10);
         const hashedPassword = await bcrypt.hash(password, salt);
-        const newServicer = this._servicerRepository.createServicer(
+        const newServicer = await this._servicerRepository.createServicer(
           companyName,
           email,
           phone,
@@ -150,7 +150,8 @@ export class ServicerService {
   ) {
     try {
       const { serviceName, description, amount, category } = data;
-      if (servicerProcedures['file']) {
+      if (file) {
+        const image = await this._cloudinary.uploadImage(file);
         const categoryId =
           await this._servicerRepository.categoryFind(category);
         await this._servicerRepository.servicerProceduresUpdate(
@@ -159,6 +160,7 @@ export class ServicerService {
           description,
           categoryId['_id'],
           amount,
+          image.secure_url,
         );
         const payload = { token: id };
         res.status(HttpStatus.ACCEPTED).json({

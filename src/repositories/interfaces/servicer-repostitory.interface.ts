@@ -19,6 +19,7 @@ export interface IServicerRepository {
     description: string,
     category: string,
     amount: string,
+    image: string,
   ): Promise<void>;
   servicerDashboard(): Promise<Servicer>;
   servicerDetails(id: string): Promise<Servicer>;

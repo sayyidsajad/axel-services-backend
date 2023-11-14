@@ -32,4 +32,10 @@ export interface IUserRepository {
   verifyConfirmPassword(id: string, hashedPassword: string): Promise<void>;
   findConnection(userId: string, id: string): Promise<any>;
   createRoom(userId: string, id: string): Promise<any>;
+  userEnquiry(
+    firstName: string,
+    lastName: string,
+    email: string,
+    message: string,
+  ): Promise<void>;
 }

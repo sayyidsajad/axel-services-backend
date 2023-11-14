@@ -12,7 +12,11 @@ import {
   UseFilters,
 } from '@nestjs/common';
 import { UsersService } from './users.service';
-import { CreateUserDto, loggedUserDto } from './dto/create-user.dto';
+import {
+  CreateUserDto,
+  SocialUser,
+  loggedUserDto,
+} from './dto/create-user.dto';
 import { PaymentVerificationDto } from './dto/verify-payment.dto';
 import { Response } from 'express';
 import { HttpExceptionFilter } from 'src/exceptions/http-exception.filter';
@@ -33,6 +37,11 @@ export class UsersController {
   @UsePipes(new ValidationPipe({ transform: true }))
   async userLogin(@Body() user: loggedUserDto, @Res() res: Response) {
     return this._usersService.userLogin(user, res);
+  }
+  @Post('googleLogin')
+  @UsePipes(new ValidationPipe({ transform: true }))
+  async googleLogin(@Body() socialUser: SocialUser, @Res() res: Response) {
+    return this._usersService.googleLogin(socialUser, res);
   }
   @Get('otpVerification')
   @UsePipes(new ValidationPipe({ transform: true }))
@@ -140,5 +149,10 @@ export class UsersController {
     @Req() req: Request,
   ) {
     return this._usersService.getRecentChats(id, res, req);
+  }
+  @Post('userEnquiry')
+  @UsePipes(new ValidationPipe({ transform: true }))
+  async userEnquiry(@Res() res: Response, @Body() data: any) {
+    return this._usersService.userEnquiry(res, data);
   }
 }

@@ -50,16 +50,13 @@ export class ServicerController {
   }
   @Post('servicerProcedures')
   @UsePipes(new ValidationPipe({ transform: true }))
-  @UseInterceptors(FileInterceptor('img', { storage }))
+  @UseInterceptors(FileInterceptor('img'))
   async servicerProcedures(
     @Body() data: servicerProcedures,
     @Res() res: Response,
     @Query('id') id: string,
     @UploadedFile() file: Express.Multer.File,
   ) {
-    console.log(data, 'in');
-
-    console.log(file);
     return this._servicerService.servicerProcedures(data, res, file, id);
   }
   @Post()

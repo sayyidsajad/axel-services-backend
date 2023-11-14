@@ -1,5 +1,9 @@
 import { HttpException, HttpStatus, Injectable } from '@nestjs/common';
-import { CreateUserDto, loggedUserDto } from './dto/create-user.dto';
+import {
+  CreateUserDto,
+  SocialUser,
+  loggedUserDto,
+} from './dto/create-user.dto';
 import { User } from './entities/user.entity';
 import { Response } from 'express';
 import * as bcrypt from 'bcrypt';
@@ -111,6 +115,34 @@ export class UsersService {
           verified: false,
           email: userFind['email'],
         });
+      }
+      const payload = { token: userFind['_id'] };
+      return res.status(HttpStatus.CREATED).json({
+        access_token: await this._jwtService.sign(payload),
+        message: 'Success',
+      });
+    } catch (error) {
+      if (error instanceof HttpException) {
+        return res.status(error.getStatus()).json({
+          message: error.message,
+        });
+      } else {
+        return res.status(HttpStatus.INTERNAL_SERVER_ERROR).json({
+          message: 'Internal Server Error',
+        });
+      }
+    }
+  }
+  async googleLogin(socialUser: SocialUser, res: Response): Promise<User> {
+    try {
+      const userFind = await this._userRepository.userEmailFindOne(
+        socialUser.email,
+      );
+      if (!userFind) {
+        throw new HttpException(
+          'Please Register in order to login with google',
+          HttpStatus.NOT_FOUND,
+        );
       }
       const payload = { token: userFind['_id'] };
       return res.status(HttpStatus.CREATED).json({
@@ -433,7 +465,7 @@ export class UsersService {
       const wallet = await this._userRepository.userFindId(userId);
       return res
         .status(HttpStatus.OK)
-        .json({ servicesFind, wallet: wallet?.['wallet'] });
+        .json({ servicesFind: servicesFind, wallet: wallet?.['wallet'] });
     } catch (error) {
       if (error instanceof HttpException) {
         return res.status(error.getStatus()).json({
@@ -528,6 +560,28 @@ export class UsersService {
             .json({ userId: userId, message: data });
         });
       }
+    } catch (error) {
+      if (error instanceof HttpException) {
+        return res.status(error.getStatus()).json({
+          message: error.message,
+        });
+      } else {
+        return res.status(HttpStatus.INTERNAL_SERVER_ERROR).json({
+          message: 'Internal Server Error',
+        });
+      }
+    }
+  }
+  async userEnquiry(res: Response, data: any) {
+    try {
+      const { firstName, lastName, email, message } = data;
+      await this._userRepository.userEnquiry(
+        firstName,
+        lastName,
+        email,
+        message,
+      );
+      return res.status(HttpStatus.ACCEPTED).json({ message: 'Success' });
     } catch (error) {
       if (error instanceof HttpException) {
         return res.status(error.getStatus()).json({

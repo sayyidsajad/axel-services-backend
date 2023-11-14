@@ -18,6 +18,8 @@ export class UserRepository implements IUserRepository {
     private _bookingModel: Model<any>,
     @Inject('MESSAGING_MODEL')
     private _messagingModel: Model<any>,
+    @Inject('ENQUIRY_MODEL')
+    private _enquiryModel: Model<any>,
   ) {}
   async servicerEmailFindOne(email: string): Promise<User> {
     return await this._servicerModel.findOne({ email });
@@ -222,5 +224,19 @@ export class UserRepository implements IUserRepository {
       users: [userId, id],
     });
     return newRoom.save();
+  }
+  async userEnquiry(
+    firstName: string,
+    lastName: string,
+    email: string,
+    message: string,
+  ): Promise<void> {
+    const enquiry = new this._enquiryModel({
+      firstName: firstName,
+      lastName: lastName,
+      email: email,
+      message: message,
+    });
+    await enquiry.save();
   }
 }

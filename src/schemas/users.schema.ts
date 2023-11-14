@@ -8,6 +8,7 @@ export const UserSchema = new mongoose.Schema(
     password: { type: String, required: true },
     isBlocked: { type: Boolean, default: false, required: true },
     isVerified: { type: Boolean, default: false, required: true },
+    googleAuth: { type: Boolean, default: false, required: true },
     inbox: {
       type: Array,
       cancelReason: { type: String },

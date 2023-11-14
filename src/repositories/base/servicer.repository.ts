@@ -68,6 +68,7 @@ export class ServicerRepository implements IServicerRepository {
     description: string,
     category: string,
     amount: string,
+    image: string,
   ): Promise<void> {
     await this._servicerModel.updateOne(
       { _id: new mongoose.Types.ObjectId(id) },
@@ -77,6 +78,7 @@ export class ServicerRepository implements IServicerRepository {
           description: description,
           category: category,
           amount: amount,
+          image: image,
         },
       },
     );

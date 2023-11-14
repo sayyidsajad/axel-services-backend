@@ -17,4 +17,5 @@ export const excluded = [
   '/verifyConfirmPassword',
   '/findAllMessages',
   '/apiDocs',
+  '/googleLogin',
 ];

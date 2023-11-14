@@ -5,7 +5,11 @@ import { DatabaseModule } from 'src/config/database/database.module';
 import { servicerProviders } from 'src/servicer/servicer.providers';
 import { usersProviders } from 'src/users/users.providers';
 import { categoryProviders } from './admin-category.providers';
-import { bookingProviders } from './admin.providers';
+import {
+  EnquiryProviders,
+  bannerProviders,
+  bookingProviders,
+} from './admin.providers';
 import { AdminRepository } from 'src/repositories/base/admin.repository';
 
 @Module({
@@ -17,6 +21,8 @@ import { AdminRepository } from 'src/repositories/base/admin.repository';
     ...usersProviders,
     ...categoryProviders,
     ...bookingProviders,
+    ...EnquiryProviders,
+    ...bannerProviders,
     AdminRepository,
   ],
 })
