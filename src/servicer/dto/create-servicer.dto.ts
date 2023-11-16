@@ -10,16 +10,20 @@ import {
 export class CreateServicerDto {
   @IsNotEmpty()
   companyName: string;
+
   @IsEmail()
   @IsString()
   @IsNotEmpty()
   email: string;
+
   @IsNumber()
   @IsNotEmpty()
   phone: number;
+
   @IsString()
   @IsNotEmpty()
   password: string;
+
   @IsString()
   @IsNotEmpty()
   confirmPassword: string;
@@ -37,9 +41,11 @@ export class servicerProcedures {
   @IsString()
   @IsNotEmpty()
   serviceName: string;
+
   @IsString()
   @IsNotEmpty()
   description: string;
+
   @IsNumberString()
   @IsNotEmpty()
   amount: string;
@@ -47,6 +53,14 @@ export class servicerProcedures {
   @IsString()
   @IsNotEmpty()
   category: string;
+
+  @IsNotEmpty()
+  @IsString()
+  formattedAddress: string;
+
   @IsOptional()
   file: Express.Multer.File;
+
+  @IsOptional()
+  files: Express.Multer.File[];
 }

@@ -5,6 +5,7 @@ import { IServicerRepository } from '../interfaces/servicer-repostitory.interfac
 import { Servicer } from 'src/servicer/entities/servicer.entity';
 import { Category } from 'src/admin/entities/admin-category.entity';
 import { BookingDto } from 'src/admin/dto/booking.dto';
+import { UploadApiResponse, UploadApiErrorResponse } from 'cloudinary';
 
 export class ServicerRepository implements IServicerRepository {
   constructor(
@@ -68,7 +69,9 @@ export class ServicerRepository implements IServicerRepository {
     description: string,
     category: string,
     amount: string,
-    image: string,
+    address: string,
+    image: (UploadApiResponse | UploadApiErrorResponse)[],
+    images: (UploadApiResponse | UploadApiErrorResponse)[],
   ): Promise<void> {
     await this._servicerModel.updateOne(
       { _id: new mongoose.Types.ObjectId(id) },
@@ -78,10 +81,19 @@ export class ServicerRepository implements IServicerRepository {
           description: description,
           category: category,
           amount: amount,
-          image: image,
+          address: address,
+          image: image[0].secure_url,
         },
       },
     );
+    if (images) {
+      for (const f of images) {
+        await this._servicerModel.updateOne(
+          { _id: new mongoose.Types.ObjectId(id) },
+          { $push: { images: f.secure_url } },
+        );
+      }
+    }
   }
   async servicerDetails(id: string): Promise<Servicer> {
     return await this._servicerModel.find({ _id: id });
@@ -128,8 +140,8 @@ export class ServicerRepository implements IServicerRepository {
     );
   }
   async cancelBooking(
-    userId: string,
     textArea: string,
+    userId: string,
     bookingId: string,
   ): Promise<void> {
     await this._userModel.updateOne(

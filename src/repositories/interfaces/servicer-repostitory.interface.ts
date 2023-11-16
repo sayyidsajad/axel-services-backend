@@ -1,3 +1,4 @@
+import { UploadApiResponse, UploadApiErrorResponse } from 'cloudinary';
 import { BookingDto } from 'src/admin/dto/booking.dto';
 import { Category } from 'src/admin/entities/admin-category.entity';
 import { Servicer } from 'src/servicer/entities/servicer.entity';
@@ -19,7 +20,9 @@ export interface IServicerRepository {
     description: string,
     category: string,
     amount: string,
-    image: string,
+    address: string,
+    image: (UploadApiResponse | UploadApiErrorResponse)[],
+    images: (UploadApiResponse | UploadApiErrorResponse)[],
   ): Promise<void>;
   servicerDashboard(): Promise<Servicer>;
   servicerDetails(id: string): Promise<Servicer>;
@@ -30,7 +33,7 @@ export interface IServicerRepository {
   categoriesList(): Promise<Category>;
   bookingsList(): Promise<BookingDto>;
   bookingApprovalStatus(id: string, status: string): Promise<void>;
-  cancelBooking(id: string, textArea: string, bookingId: string): Promise<void>;
+  cancelBooking(bookingId: string, id: string, textArea: string): Promise<void>;
   findConnection(id: string): Promise<any>;
   recentChats(servicerId: string, id: string): Promise<any>;
   createRoom(serviceId: string, id: string): Promise<any>;

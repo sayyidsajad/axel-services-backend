@@ -3,7 +3,7 @@ import {
   HttpStatus,
   Injectable,
   Res,
-  UploadedFile,
+  UploadedFiles,
 } from '@nestjs/common';
 import {
   CreateServicerDto,
@@ -145,13 +145,15 @@ export class ServicerService {
   async servicerProcedures(
     data: servicerProcedures,
     @Res() res: Response,
-    @UploadedFile() file: Express.Multer.File,
+    @UploadedFiles() files: Array<Express.Multer.File>,
     id: string,
   ) {
     try {
-      const { serviceName, description, amount, category } = data;
-      if (file) {
-        const image = await this._cloudinary.uploadImage(file);
+      const { serviceName, description, amount, category, formattedAddress } =
+        data;
+      if (files) {
+        const image = await this._cloudinary.uploadImage(files['img']);
+        const images = await this._cloudinary.uploadImage(files['docs']);
         const categoryId =
           await this._servicerRepository.categoryFind(category);
         await this._servicerRepository.servicerProceduresUpdate(
@@ -160,7 +162,9 @@ export class ServicerService {
           description,
           categoryId['_id'],
           amount,
-          image.secure_url,
+          formattedAddress,
+          image,
+          images,
         );
         const payload = { token: id };
         res.status(HttpStatus.ACCEPTED).json({
@@ -403,13 +407,18 @@ export class ServicerService {
     textArea: string,
     bookingId: string,
     userId: string,
+    status?: string,
   ) {
     try {
+      if (status === 'Pending' || status === 'Service Completed') {
+        await this._servicerRepository.bookingApprovalStatus(bookingId, status);
+        return res.status(HttpStatus.ACCEPTED).json({ status });
+      }
       await this._servicerRepository.bookingApprovalStatus(
         bookingId,
         'Cancelled',
       );
-      await this._servicerRepository.cancelBooking(userId, textArea, bookingId);
+      await this._servicerRepository.cancelBooking(textArea, userId, bookingId);
       return res.status(HttpStatus.ACCEPTED).json({ message: 'Success' });
     } catch (error) {
       if (error instanceof HttpException) {

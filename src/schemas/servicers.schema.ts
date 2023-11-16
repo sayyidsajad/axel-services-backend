@@ -10,6 +10,7 @@ export const ServicerSchema = new mongoose.Schema({
   description: String,
   amount: Number,
   image: String,
+  images: [String],
   address: Object,
   isBlocked: { type: Boolean, default: false },
   isApproved: { type: Boolean, default: false },

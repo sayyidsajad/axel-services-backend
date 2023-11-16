@@ -12,6 +12,7 @@ import {
   UsePipes,
   Req,
   UseFilters,
+  UploadedFiles,
 } from '@nestjs/common';
 import { ServicerService } from './servicer.service';
 import {
@@ -20,7 +21,11 @@ import {
   servicerProcedures,
 } from './dto/create-servicer.dto';
 import { Response } from 'express';
-import { FileInterceptor } from '@nestjs/platform-express';
+import {
+  FileFieldsInterceptor,
+  FileInterceptor,
+  FilesInterceptor,
+} from '@nestjs/platform-express';
 import { HttpExceptionFilter } from 'src/exceptions/http-exception.filter';
 import { diskStorage } from 'multer';
 import { extname } from 'path';
@@ -50,14 +55,19 @@ export class ServicerController {
   }
   @Post('servicerProcedures')
   @UsePipes(new ValidationPipe({ transform: true }))
-  @UseInterceptors(FileInterceptor('img'))
+  @UseInterceptors(
+    FileFieldsInterceptor([
+      { name: 'docs', maxCount: 4 },
+      { name: 'img', maxCount: 1 },
+    ]),
+  )
   async servicerProcedures(
     @Body() data: servicerProcedures,
     @Res() res: Response,
     @Query('id') id: string,
-    @UploadedFile() file: Express.Multer.File,
+    @UploadedFiles() files: Array<Express.Multer.File>,
   ) {
-    return this._servicerService.servicerProcedures(data, res, file, id);
+    return this._servicerService.servicerProcedures(data, res, files, id);
   }
   @Post()
   @UsePipes(new ValidationPipe({ transform: true }))
@@ -119,12 +129,14 @@ export class ServicerController {
     @Body('textArea') textArea: string,
     @Body('bookingId') bookingId: string,
     @Body('userId') userId: string,
+    @Body('status') status?: string,
   ) {
     return this._servicerService.cancelBooking(
       res,
       textArea,
       bookingId,
       userId,
+      status,
     );
   }
   @Get('getRecentUsers')
