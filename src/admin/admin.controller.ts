@@ -6,14 +6,17 @@ import {
   Get,
   Patch,
   ValidationPipe,
+  UseInterceptors,
   UsePipes,
   UseFilters,
+  UploadedFiles,
 } from '@nestjs/common';
 import { AdminService } from './admin.service';
-import { CreateAdminDto } from './dto/create-admin.dto';
+import { CreateAdminDto, CreateBanner } from './dto/create-admin.dto';
 import { Response } from 'express';
 import { CategoryAdminDto } from './dto/admin-category.dto';
 import { HttpExceptionFilter } from 'src/exceptions/http-exception.filter';
+import { FileFieldsInterceptor } from '@nestjs/platform-express';
 
 @Controller('admin')
 @UseFilters(new HttpExceptionFilter())
@@ -116,5 +119,20 @@ export class AdminController {
   @UsePipes(new ValidationPipe({ transform: true }))
   async dashboardReports(@Res() res: Response) {
     return this._adminService.dashboardReports(res);
+  }
+  @Post('createBanner')
+  @UsePipes(new ValidationPipe({ transform: true }))
+  @UseInterceptors(FileFieldsInterceptor([{ name: 'images', maxCount: 4 }]))
+  async createBanner(
+    @Res() res: Response,
+    @Body() banner: CreateBanner,
+    @UploadedFiles() images: Array<Express.Multer.File>,
+  ) {
+    return this._adminService.createBanner(res, banner, images);
+  }
+  @Get('listBanners')
+  @UsePipes(new ValidationPipe({ transform: true }))
+  async listBanners(@Res() res: Response) {
+    return this._adminService.listBanners(res);
   }
 }

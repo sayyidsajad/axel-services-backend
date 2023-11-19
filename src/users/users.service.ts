@@ -594,4 +594,37 @@ export class UsersService {
       }
     }
   }
+  async review(res: Response, data: any) {
+    try {
+      const { servicerId, userId, message } = data;
+      await this._userRepository.review(servicerId, userId, message);
+      return res.status(HttpStatus.ACCEPTED).json({ message: 'Success' });
+    } catch (error) {
+      if (error instanceof HttpException) {
+        return res.status(error.getStatus()).json({
+          message: error.message,
+        });
+      } else {
+        return res.status(HttpStatus.INTERNAL_SERVER_ERROR).json({
+          message: 'Internal Server Error',
+        });
+      }
+    }
+  }
+  async reviewsList(id: string, res: Response) {
+    try {
+      const reviews = await this._userRepository.reviewsList(id);
+      return res.status(HttpStatus.ACCEPTED).json({ reviews });
+    } catch (error) {
+      if (error instanceof HttpException) {
+        return res.status(error.getStatus()).json({
+          message: error.message,
+        });
+      } else {
+        return res.status(HttpStatus.INTERNAL_SERVER_ERROR).json({
+          message: 'Internal Server Error',
+        });
+      }
+    }
+  }
 }

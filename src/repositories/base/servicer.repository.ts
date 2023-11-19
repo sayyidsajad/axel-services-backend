@@ -211,4 +211,44 @@ export class ServicerRepository implements IServicerRepository {
   bookingFindId(id: string): Promise<BookingDto> {
     return this._bookingModel.findById({ _id: id });
   }
+  async monthlyEarning(servicerId: string): Promise<any> {
+    return await this._bookingModel.aggregate([
+      {
+        $match: {
+          service: new mongoose.Types.ObjectId(servicerId),
+          approvalStatus: 'Service Completed',
+        },
+      },
+      {
+        $group: {
+          _id: {
+            year: { $year: { $toDate: '$timestamps' } },
+            month: { $month: { $toDate: '$timestamps' } },
+          },
+          totalEarnings: { $sum: '$total' },
+        },
+      },
+      {
+        $sort: { '_id.year': 1, '_id.month': 1 },
+      },
+    ]);
+  }
+  async currentYearEarning(servicerId: string): Promise<any> {
+    const result = await this._bookingModel.aggregate([
+      {
+        $match: {
+          service: new mongoose.Types.ObjectId(servicerId),
+          approvalStatus: 'Service Completed',
+          createdAt: { $gte: new Date(new Date().getFullYear(), 0, 1) },
+        },
+      },
+      {
+        $group: {
+          _id: null,
+          totalEarnings: { $sum: '$total' },
+        },
+      },
+    ]);
+    return result.length > 0 ? result[0].totalEarnings : 0;
+  }
 }

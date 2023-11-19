@@ -1,4 +1,4 @@
-import { IsEmail, IsNotEmpty } from 'class-validator';
+import { IsEmail, IsNotEmpty, IsOptional, IsString } from 'class-validator';
 
 export class CreateAdminDto {
   @IsNotEmpty()
@@ -6,4 +6,16 @@ export class CreateAdminDto {
   email: string;
   @IsNotEmpty()
   password: string;
+}
+export class CreateBanner {
+  @IsNotEmpty()
+  @IsString()
+  bannerName: string;
+
+  @IsString()
+  @IsNotEmpty()
+  description: string;
+
+  @IsOptional()
+  images: Express.Multer.File[];
 }

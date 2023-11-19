@@ -20,6 +20,8 @@ export class UserRepository implements IUserRepository {
     private _messagingModel: Model<any>,
     @Inject('ENQUIRY_MODEL')
     private _enquiryModel: Model<any>,
+    @Inject('REVIEW_MODEL')
+    private _reviewModel: Model<any>,
   ) {}
   async servicerEmailFindOne(email: string): Promise<User> {
     return await this._servicerModel.findOne({ email });
@@ -238,5 +240,37 @@ export class UserRepository implements IUserRepository {
       message: message,
     });
     await enquiry.save();
+  }
+  async review(
+    servicerId: string,
+    userId: string,
+    message: string,
+  ): Promise<void> {
+    const review = new this._reviewModel({
+      servicer: new mongoose.Types.ObjectId(servicerId),
+      user: new mongoose.Types.ObjectId(userId),
+      review: message,
+    });
+    await review.save();
+  }
+  async reviewsList(servicerId: string): Promise<void> {
+    const reviewsWithUsers = await this._reviewModel.aggregate([
+      {
+        $match: {
+          servicer: new mongoose.Types.ObjectId(servicerId),
+        },
+      },
+      {
+        $lookup: {
+          from: 'USER_MODEL',
+          localField: 'user',
+          foreignField: '_id',
+          as: 'users',
+        },
+      },
+    ]);
+
+    // Process the reviews as needed
+    console.log('Reviews:', reviewsWithUsers);
   }
 }

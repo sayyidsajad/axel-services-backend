@@ -11,9 +11,10 @@ import {
   bookingProviders,
 } from './admin.providers';
 import { AdminRepository } from 'src/repositories/base/admin.repository';
+import { CloudinaryModule } from 'src/cloudinary/cloudinary.module';
 
 @Module({
-  imports: [DatabaseModule],
+  imports: [DatabaseModule, CloudinaryModule],
   controllers: [AdminController],
   providers: [
     AdminService,

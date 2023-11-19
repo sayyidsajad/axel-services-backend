@@ -1,5 +1,5 @@
 import { HttpException, HttpStatus, Injectable, Res } from '@nestjs/common';
-import { CreateAdminDto } from './dto/create-admin.dto';
+import { CreateAdminDto, CreateBanner } from './dto/create-admin.dto';
 import { ConfigService } from '@nestjs/config';
 import { Response } from 'express';
 import { JwtService } from '@nestjs/jwt';
@@ -8,6 +8,7 @@ import * as otpGenerator from 'otp-generator';
 import { CategoryAdminDto } from './dto/admin-category.dto';
 import * as dotenv from 'dotenv';
 import { AdminRepository } from 'src/repositories/base/admin.repository';
+import { CloudinaryService } from 'src/cloudinary/cloudinary.service';
 dotenv.config();
 
 @Injectable()
@@ -17,6 +18,7 @@ export class AdminService {
     private _jwtService: JwtService,
     private readonly _mailerService: MailerService,
     private _adminRepository: AdminRepository,
+    private _cloudinary: CloudinaryService,
   ) {}
   async adminLogin(createAdminDto: CreateAdminDto, @Res() res: Response) {
     try {
@@ -350,15 +352,58 @@ export class AdminService {
   }
   async dashboardReports(res: Response) {
     try {
+      const currentMonthEarnings =
+        await this._adminRepository.currentMonthEarning();
+      const currentYearEarning =
+        await this._adminRepository.currentYearEarning();
       const pending = await this._adminRepository.bookingStatusCount('Pending');
       const cancelled =
         await this._adminRepository.bookingStatusCount('Cancelled');
       const serviceCompleted =
         await this._adminRepository.bookingStatusCount('Service Completed');
       return res.status(HttpStatus.OK).json({
-        message: 'Success',
         approvalStatus: { pending, cancelled, serviceCompleted },
+        currentMonthEarnings: currentMonthEarnings,
+        currentYearEarning: currentYearEarning,
       });
+    } catch (error) {
+      if (error instanceof HttpException) {
+        return res.status(error.getStatus()).json({
+          message: error.message,
+        });
+      } else {
+        return res.status(HttpStatus.INTERNAL_SERVER_ERROR).json({
+          message: 'Internal Server Error',
+        });
+      }
+    }
+  }
+  async createBanner(
+    res: Response,
+    banner: CreateBanner,
+    images: Array<Express.Multer.File>,
+  ) {
+    try {
+      const { bannerName, description } = banner;
+      const image = await this._cloudinary.uploadImage(images['images']);
+      await this._adminRepository.createBanner(bannerName, description, image);
+      return res.status(HttpStatus.CREATED).json({ message: 'Success' });
+    } catch (error) {
+      if (error instanceof HttpException) {
+        return res.status(error.getStatus()).json({
+          message: error.message,
+        });
+      } else {
+        return res.status(HttpStatus.INTERNAL_SERVER_ERROR).json({
+          message: 'Internal Server Error',
+        });
+      }
+    }
+  }
+  async listBanners(@Res() res: Response) {
+    try {
+      const banners = await this._adminRepository.listBanners();
+      return res.status(HttpStatus.OK).json({ banners });
     } catch (error) {
       if (error instanceof HttpException) {
         return res.status(error.getStatus()).json({

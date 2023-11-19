@@ -16,7 +16,7 @@ import { excluded } from './auth/exclude.auth';
 import { ChatModule } from './chat/chat.module';
 import { HttpExceptionFilter } from './exceptions/http-exception.filter';
 import { APP_FILTER } from '@nestjs/core';
-
+import { OpenAiModule } from './open-ai/open-ai.module';
 dotenv.config();
 
 @Module({
@@ -54,6 +54,7 @@ dotenv.config();
     AuthModule,
     CloudinaryModule,
     ChatModule,
+    OpenAiModule,
   ],
   controllers: [AppController],
   providers: [

@@ -40,4 +40,6 @@ export interface IServicerRepository {
   bookingStatusCount(id: string, status: string): Promise<BookingDto>;
   salesByYear(id: string, currentSalesYear: Date): Promise<BookingDto>;
   bookingFindId(id: string): Promise<BookingDto>;
+  monthlyEarning(id: string): Promise<any>;
+  currentYearEarning(id: string): Promise<any>;
 }

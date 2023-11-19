@@ -38,4 +38,6 @@ export interface IUserRepository {
     email: string,
     message: string,
   ): Promise<void>;
+  review(servicerId: string, userId: string, message: string): Promise<void>;
+  reviewsList(servicerId: string): Promise<any>;
 }

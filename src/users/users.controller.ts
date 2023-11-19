@@ -155,4 +155,14 @@ export class UsersController {
   async userEnquiry(@Res() res: Response, @Body() data: any) {
     return this._usersService.userEnquiry(res, data);
   }
+  @Post('review')
+  @UsePipes(new ValidationPipe({ transform: true }))
+  async review(@Res() res: Response, @Body() data: any) {
+    return this._usersService.review(res, data);
+  }
+  @Get('reviewsList')
+  @UsePipes(new ValidationPipe({ transform: true }))
+  async reviewsList(@Query('id') id: string, @Res() res: Response) {
+    return this._usersService.reviewsList(id, res);
+  }
 }

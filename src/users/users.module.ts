@@ -1,6 +1,6 @@
 import { Module } from '@nestjs/common';
 import { UsersController } from './users.controller';
-import { usersProviders } from './users.providers';
+import { reviewsProviders, usersProviders } from './users.providers';
 import { DatabaseModule } from '../config/database/database.module';
 import { UsersService } from './users.service';
 import { ConfigModule } from '@nestjs/config';
@@ -24,12 +24,13 @@ dotenv.config();
   controllers: [UsersController],
   providers: [
     UsersService,
+    UserRepository,
     ...usersProviders,
     ...bookingProviders,
     ...servicerProviders,
     ...messagingsProviders,
     ...EnquiryProviders,
-    UserRepository,
+    ...reviewsProviders,
   ],
   exports: [UsersService],
 })

@@ -1,3 +1,4 @@
+import { UploadApiErrorResponse, UploadApiResponse } from 'cloudinary';
 import { BookingDto } from 'src/admin/dto/booking.dto';
 import { Category } from 'src/admin/entities/admin-category.entity';
 import { Servicer } from 'src/servicer/entities/servicer.entity';
@@ -29,4 +30,12 @@ export interface IAdminRepository {
     description: string,
   ): Promise<void>;
   bookingStatusCount(status: string): Promise<BookingDto>;
+  currentMonthEarning(): Promise<any>;
+  createBanner(
+    bannerName: string,
+    description: string,
+    image: (UploadApiResponse | UploadApiErrorResponse)[],
+  ): Promise<void>;
+  listBanners(): Promise<any>;
+  currentYearEarning(): Promise<any>;
 }

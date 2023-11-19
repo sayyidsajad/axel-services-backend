@@ -507,6 +507,10 @@ export class ServicerService {
       const token = authHeader.split(' ')[1];
       const decoded = await this._jwtService.verify(token);
       const servicerId = decoded.token;
+      const monthlyEarning =
+        await this._servicerRepository.monthlyEarning(servicerId);
+      const currentYearEarning =
+        await this._servicerRepository.currentYearEarning(servicerId);
       const pending = await this._servicerRepository.bookingStatusCount(
         servicerId,
         'Pending',
@@ -550,6 +554,8 @@ export class ServicerService {
           serviceCompleted,
         },
         salesData: salesData,
+        monthlyEarning: monthlyEarning,
+        currentYearEarning: currentYearEarning,
       });
     } catch (error) {
       if (error instanceof HttpException) {
