@@ -53,11 +53,6 @@ export class UsersController {
   async loadHome(@Res() res: Response, @Body('email') email: string) {
     return this._usersService.loadHome(res, email);
   }
-  @Get('logOut')
-  @UsePipes(new ValidationPipe({ transform: true }))
-  async logOut(@Res() res: Response) {
-    return this._usersService.logOut(res);
-  }
   @Post('bookNow')
   @UsePipes(new ValidationPipe({ transform: true }))
   async bookNow(
@@ -164,5 +159,10 @@ export class UsersController {
   @UsePipes(new ValidationPipe({ transform: true }))
   async reviewsList(@Query('id') id: string, @Res() res: Response) {
     return this._usersService.reviewsList(id, res);
+  }
+  @Get('listBanners')
+  @UsePipes(new ValidationPipe({ transform: true }))
+  async listBanners(@Res() res: Response) {
+    return this._usersService.listBanners(res);
   }
 }

@@ -222,7 +222,7 @@ export class UsersService {
   async loadHome(res: Response, email: string) {
     try {
       await this._userRepository.userEmailUpdateOne(email);
-      return res.status(HttpStatus.CREATED).json({ message: 'Success' });
+      return res.status(HttpStatus.CREATED);
     } catch (error) {
       if (error instanceof HttpException) {
         return res.status(error.getStatus()).json({
@@ -239,21 +239,6 @@ export class UsersService {
     try {
       const servicesFind = await this._userRepository.servicerList();
       return res.status(HttpStatus.OK).json({ servicesFind: servicesFind });
-    } catch (error) {
-      if (error instanceof HttpException) {
-        return res.status(error.getStatus()).json({
-          message: error.message,
-        });
-      } else {
-        return res.status(HttpStatus.INTERNAL_SERVER_ERROR).json({
-          message: 'Internal Server Error',
-        });
-      }
-    }
-  }
-  async logOut(res: Response) {
-    try {
-      return res.status(HttpStatus.OK).json({ message: 'Success' });
     } catch (error) {
       if (error instanceof HttpException) {
         return res.status(error.getStatus()).json({
@@ -319,9 +304,7 @@ export class UsersService {
   async bookingsList(res: Response) {
     try {
       const bookings = await this._userRepository.listBookings();
-      return res
-        .status(HttpStatus.OK)
-        .json({ message: 'Success', bookings: bookings });
+      return res.status(HttpStatus.OK).json({ bookings });
     } catch (error) {
       if (error instanceof HttpException) {
         return res.status(error.getStatus()).json({
@@ -346,7 +329,7 @@ export class UsersService {
         userId,
         bookedAmt['total'],
       );
-      return res.status(HttpStatus.CREATED).json({ message: 'Success' });
+      return res.status(HttpStatus.CREATED);
     } catch (error) {
       if (error instanceof HttpException) {
         return res.status(error.getStatus()).json({
@@ -372,7 +355,7 @@ export class UsersService {
       );
       return res
         .status(HttpStatus.OK)
-        .json({ message: 'Success', inbox: inboxData, service: serviceData });
+        .json({ inbox: inboxData, service: serviceData });
     } catch (error) {
       if (error instanceof HttpException) {
         return res.status(error.getStatus()).json({
@@ -392,7 +375,7 @@ export class UsersService {
       const decoded = this._jwtService.verify(token);
       const userId = decoded.token;
       await this._userRepository.cancelAll(userId);
-      return res.status(HttpStatus.CREATED).json({ message: 'Success' });
+      return res.status(HttpStatus.CREATED);
     } catch (error) {
       if (error instanceof HttpException) {
         return res.status(error.getStatus()).json({
@@ -442,7 +425,7 @@ export class UsersService {
       const decoded = await this._jwtService.verify(token);
       const userId = decoded.token;
       const user = await this._userRepository.userFindId(userId);
-      return res.status(HttpStatus.OK).json({ message: 'Success', user: user });
+      return res.status(HttpStatus.OK).json({ user });
     } catch (error) {
       if (error instanceof HttpException) {
         return res.status(error.getStatus()).json({
@@ -491,7 +474,7 @@ export class UsersService {
           text: 'Axel Services',
           html: `<a>${resetLink}</a>`,
         });
-        return res.status(HttpStatus.OK).json({ message: 'Success' });
+        return res.status(HttpStatus.OK);
       } else {
         throw new HttpException(
           'There is no email registered in this account',
@@ -525,7 +508,7 @@ export class UsersService {
       const salt = await bcrypt.genSalt(10);
       const hashedPassword = await bcrypt.hash(newPassword, salt);
       await this._userRepository.verifyConfirmPassword(id, hashedPassword);
-      return res.status(HttpStatus.CREATED).json({ message: 'Success' });
+      return res.status(HttpStatus.CREATED);
     } catch (error) {
       if (error instanceof HttpException) {
         return res.status(error.getStatus()).json({
@@ -581,7 +564,7 @@ export class UsersService {
         email,
         message,
       );
-      return res.status(HttpStatus.ACCEPTED).json({ message: 'Success' });
+      return res.status(HttpStatus.ACCEPTED);
     } catch (error) {
       if (error instanceof HttpException) {
         return res.status(error.getStatus()).json({
@@ -598,7 +581,7 @@ export class UsersService {
     try {
       const { servicerId, userId, message } = data;
       await this._userRepository.review(servicerId, userId, message);
-      return res.status(HttpStatus.ACCEPTED).json({ message: 'Success' });
+      return res.status(HttpStatus.ACCEPTED);
     } catch (error) {
       if (error instanceof HttpException) {
         return res.status(error.getStatus()).json({
@@ -615,6 +598,22 @@ export class UsersService {
     try {
       const reviews = await this._userRepository.reviewsList(id);
       return res.status(HttpStatus.ACCEPTED).json({ reviews });
+    } catch (error) {
+      if (error instanceof HttpException) {
+        return res.status(error.getStatus()).json({
+          message: error.message,
+        });
+      } else {
+        return res.status(HttpStatus.INTERNAL_SERVER_ERROR).json({
+          message: 'Internal Server Error',
+        });
+      }
+    }
+  }
+  async listBanners(res: Response) {
+    try {
+      const banners = await this._userRepository.listBanners();
+      return res.status(HttpStatus.OK).json({ banners });
     } catch (error) {
       if (error instanceof HttpException) {
         return res.status(error.getStatus()).json({

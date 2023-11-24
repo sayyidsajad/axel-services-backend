@@ -1,13 +1,14 @@
 import { IChatRepository } from '../interfaces/chat-repository.interface';
 import { Model } from 'mongoose';
 import { Inject } from '@nestjs/common';
+import { ChatDto } from 'src/chat/dto/create-chat.dto';
 
 export class ChatRepository implements IChatRepository {
   constructor(
     @Inject('MESSAGING_MODEL')
     private _messagingModel: Model<any>,
   ) {}
-  async newMessage(data: any): Promise<any> {
+  async newMessage(data: ChatDto): Promise<any> {
     await this._messagingModel.updateOne(
       { _id: data.id },
       {
@@ -23,10 +24,6 @@ export class ChatRepository implements IChatRepository {
         },
       },
     );
-    return await this._messagingModel
-      .findOne({ _id: data.id })
-      .populate('messages.sender')
-      .populate('messages.receiver');
   }
   async findMessage(id: string): Promise<any> {
     return await this._messagingModel

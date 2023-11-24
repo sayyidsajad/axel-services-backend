@@ -7,6 +7,7 @@ import { CreateUserDto } from 'src/users/dto/create-user.dto';
 import * as bcrypt from 'bcrypt';
 import { Servicer } from 'src/servicer/entities/servicer.entity';
 import { BookingDto } from 'src/admin/dto/booking.dto';
+import { IBanner } from './types/admin/admin-types';
 
 export class UserRepository implements IUserRepository {
   constructor(
@@ -22,7 +23,20 @@ export class UserRepository implements IUserRepository {
     private _enquiryModel: Model<any>,
     @Inject('REVIEW_MODEL')
     private _reviewModel: Model<any>,
+    @Inject('BANNER_MODEL')
+    private _bannerModel: Model<any>,
   ) {}
+  async findAllUsers(): Promise<any[]> {
+    const users = await this._userModel.aggregate([
+      {
+        $project: {
+          _id: 0,
+          email: 1,
+        },
+      },
+    ]);
+    return users.map((user) => user.email);
+  }
   async servicerEmailFindOne(email: string): Promise<User> {
     return await this._servicerModel.findOne({ email });
   }
@@ -50,7 +64,7 @@ export class UserRepository implements IUserRepository {
       { $set: { isVerified: true } },
     );
   }
-  async servicerList(): Promise<Servicer> {
+  async servicerList(): Promise<Servicer[]> {
     return await this._servicerModel.aggregate([
       {
         $lookup: {
@@ -253,8 +267,8 @@ export class UserRepository implements IUserRepository {
     });
     await review.save();
   }
-  async reviewsList(servicerId: string): Promise<void> {
-    const reviewsWithUsers = await this._reviewModel.aggregate([
+  async reviewsList(servicerId: string): Promise<any> {
+    return await this._reviewModel.aggregate([
       {
         $match: {
           servicer: new mongoose.Types.ObjectId(servicerId),
@@ -271,6 +285,8 @@ export class UserRepository implements IUserRepository {
     ]);
 
     // Process the reviews as needed
-    console.log('Reviews:', reviewsWithUsers);
+  }
+  async listBanners(): Promise<IBanner[]> {
+    return await this._bannerModel.find();
   }
 }

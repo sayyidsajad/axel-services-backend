@@ -3,6 +3,7 @@ import { Servicer } from 'src/servicer/entities/servicer.entity';
 import { BookingDto } from 'src/admin/dto/booking.dto';
 
 export interface IUserRepository {
+  findAllUsers(): Promise<any[]>;
   servicerEmailFindOne(email: string): Promise<Servicer>;
   userPhoneFindOne(phone: number): Promise<User>;
   createUser(user: User): Promise<User>;
@@ -40,4 +41,5 @@ export interface IUserRepository {
   ): Promise<void>;
   review(servicerId: string, userId: string, message: string): Promise<void>;
   reviewsList(servicerId: string): Promise<any>;
+  listBanners(): Promise<any>;
 }

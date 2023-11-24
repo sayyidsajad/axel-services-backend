@@ -65,11 +65,6 @@ export class AdminController {
   async listBookings(@Res() res: Response) {
     return this._adminService.listBookings(res);
   }
-  @Get('logOut')
-  @UsePipes(new ValidationPipe({ transform: true }))
-  async logOut(@Res() res: Response) {
-    return this._adminService.logOut(res);
-  }
   @Patch('listUnlist')
   @UsePipes(new ValidationPipe({ transform: true }))
   async listUnlist(@Res() res: Response, @Body('id') id: string) {

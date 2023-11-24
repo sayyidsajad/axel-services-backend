@@ -3,11 +3,12 @@ import { BookingDto } from 'src/admin/dto/booking.dto';
 import { Category } from 'src/admin/entities/admin-category.entity';
 import { Servicer } from 'src/servicer/entities/servicer.entity';
 import { User } from 'src/users/entities/user.entity';
+import { IBanner, IEarningsWithProfit } from '../base/types/admin/admin-types';
 
 export interface IAdminRepository {
   servicerFindId(id: string): Promise<Servicer>;
   servicerApproval(id: string, approval: boolean): Promise<void>;
-  altCode(id: string, otp: string): Promise<any>;
+  altCode(id: string, otp: string): Promise<{ acknowledged: boolean }>;
   servicerFindAll(): Promise<Servicer>;
   usersFindAll(): Promise<User>;
   userFindId(id: string): Promise<User>;
@@ -30,12 +31,12 @@ export interface IAdminRepository {
     description: string,
   ): Promise<void>;
   bookingStatusCount(status: string): Promise<BookingDto>;
-  currentMonthEarning(): Promise<any>;
+  currentMonthEarning(): Promise<BookingDto>;
   createBanner(
     bannerName: string,
     description: string,
     image: (UploadApiResponse | UploadApiErrorResponse)[],
   ): Promise<void>;
-  listBanners(): Promise<any>;
-  currentYearEarning(): Promise<any>;
+  listBanners(): Promise<IBanner[]>;
+  currentYearEarning(): Promise<IEarningsWithProfit[]>;
 }

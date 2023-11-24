@@ -6,7 +6,11 @@ import { UsersService } from './users.service';
 import { ConfigModule } from '@nestjs/config';
 import { servicerProviders } from 'src/servicer/servicer.providers';
 import * as dotenv from 'dotenv';
-import { EnquiryProviders, bookingProviders } from 'src/admin/admin.providers';
+import {
+  EnquiryProviders,
+  bannerProviders,
+  bookingProviders,
+} from 'src/admin/admin.providers';
 import { TwilioModule } from 'nestjs-twilio';
 import { messagingsProviders } from 'src/chat/chat.providers';
 import { UserRepository } from 'src/repositories/base/user.repository';
@@ -31,6 +35,7 @@ dotenv.config();
     ...messagingsProviders,
     ...EnquiryProviders,
     ...reviewsProviders,
+    ...bannerProviders,
   ],
   exports: [UsersService],
 })

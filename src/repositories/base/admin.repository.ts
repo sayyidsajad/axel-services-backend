@@ -6,6 +6,7 @@ import { Category } from 'src/admin/entities/admin-category.entity';
 import { Servicer } from 'src/servicer/entities/servicer.entity';
 import { BookingDto } from 'src/admin/dto/booking.dto';
 import { UploadApiErrorResponse, UploadApiResponse } from 'cloudinary';
+import { IBanner, IEarningsWithProfit } from './types/admin/admin-types';
 
 export class AdminRepository implements IAdminRepository {
   constructor(
@@ -30,7 +31,7 @@ export class AdminRepository implements IAdminRepository {
       { $set: { isApproved: approval } },
     );
   }
-  async altCode(id: string, otp: string): Promise<any> {
+  async altCode(id: string, otp: string): Promise<{ acknowledged: boolean }> {
     return await this._servicerModel.updateOne(
       { _id: id },
       { $set: { altCode: otp } },
@@ -172,10 +173,10 @@ export class AdminRepository implements IAdminRepository {
     });
     await newBanner.save();
   }
-  async listBanners(): Promise<any> {
+  async listBanners(): Promise<IBanner[]> {
     return await this._bannerModel.find({});
   }
-  async currentYearEarning(): Promise<any> {
+  async currentYearEarning(): Promise<IEarningsWithProfit[]> {
     const result = await this._bookingModel.aggregate([
       {
         $match: {
@@ -195,20 +196,21 @@ export class AdminRepository implements IAdminRepository {
         $sort: { '_id.year': 1, '_id.month': 1 },
       },
     ]);
-    const monthlyEarningsWithProfit = result.map((entry) => {
-      const year = entry._id.year;
-      const month = entry._id.month;
-      const totalEarnings = entry.totalEarnings;
-      const profitValue = Math.round(totalEarnings * 0.05);
-      const earningsWithProfit = {
-        year,
-        month,
-        totalEarnings,
-        profitValue,
-      };
-      return earningsWithProfit;
-    });
-
+    const monthlyEarningsWithProfit: IEarningsWithProfit[] = result.map(
+      (entry) => {
+        const year = entry._id.year;
+        const month = entry._id.month;
+        const totalEarnings = entry.totalEarnings;
+        const profitValue = Math.round(totalEarnings * 0.05);
+        const earningsWithProfit = {
+          year,
+          month,
+          totalEarnings,
+          profitValue,
+        };
+        return earningsWithProfit;
+      },
+    );
     return monthlyEarningsWithProfit;
   }
 }

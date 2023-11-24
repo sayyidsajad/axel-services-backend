@@ -1,4 +1,4 @@
-import { HttpException, HttpStatus, Injectable, Res } from '@nestjs/common';
+import { HttpException, HttpStatus, Injectable } from '@nestjs/common';
 import { CreateAdminDto, CreateBanner } from './dto/create-admin.dto';
 import { ConfigService } from '@nestjs/config';
 import { Response } from 'express';
@@ -16,11 +16,11 @@ export class AdminService {
   constructor(
     private _configService: ConfigService,
     private _jwtService: JwtService,
-    private readonly _mailerService: MailerService,
     private _adminRepository: AdminRepository,
     private _cloudinary: CloudinaryService,
+    private readonly _mailerService: MailerService,
   ) {}
-  async adminLogin(createAdminDto: CreateAdminDto, @Res() res: Response) {
+  async adminLogin(createAdminDto: CreateAdminDto, res: Response) {
     try {
       const adminEmail = this._configService.get<string>('ADMIN_EMAIL');
       const adminPass = this._configService.get<string>('ADMIN_PASS');
@@ -31,7 +31,6 @@ export class AdminService {
           const payload = { _id: adminId };
           res.status(HttpStatus.OK).json({
             access_token: await this._jwtService.sign(payload),
-            message: 'Successfully Logged In',
           });
         } else {
           res
@@ -55,7 +54,7 @@ export class AdminService {
       }
     }
   }
-  async approveServicer(id: string, @Res() res: Response) {
+  async approveServicer(id: string, res: Response) {
     try {
       const findApproved = await this._adminRepository.servicerFindId(id);
       if (findApproved['isApproved'] === true) {
@@ -97,7 +96,7 @@ export class AdminService {
       }
     }
   }
-  async servicersApproval(@Res() res: Response) {
+  async servicersApproval(res: Response) {
     try {
       const servicesFind = await this._adminRepository.servicerFindAll();
       return res
@@ -115,7 +114,7 @@ export class AdminService {
       }
     }
   }
-  async cancelApproval(id: string, @Res() res: Response) {
+  async cancelApproval(id: string, res: Response) {
     try {
       const servicesApproved = await this._adminRepository.servicerApproval(
         id,
@@ -136,7 +135,7 @@ export class AdminService {
       }
     }
   }
-  async userMgt(@Res() res: Response) {
+  async userMgt(res: Response) {
     try {
       const users = await this._adminRepository.usersFindAll();
       res.status(HttpStatus.OK).json({ message: 'Success', users: users });
@@ -152,7 +151,7 @@ export class AdminService {
       }
     }
   }
-  async blockUnblockUser(@Res() res: Response, id: string) {
+  async blockUnblockUser(res: Response, id: string) {
     try {
       const findBlock = await this._adminRepository.userFindId(id);
       if (findBlock['isBlocked'] === true) {
@@ -177,7 +176,7 @@ export class AdminService {
     try {
       const { categoryName, description } = category;
       await this._adminRepository.createCategory(categoryName, description);
-      return res.status(HttpStatus.CREATED).json({ message: 'Success' });
+      return res.status(HttpStatus.CREATED);
     } catch (error) {
       if (error instanceof HttpException) {
         return res.status(error.getStatus()).json({
@@ -190,12 +189,10 @@ export class AdminService {
       }
     }
   }
-  async listCategory(@Res() res: Response) {
+  async listCategory(res: Response) {
     try {
       const listCategories = await this._adminRepository.categoryFindAll();
-      return res
-        .status(HttpStatus.OK)
-        .json({ message: 'Success', categories: listCategories });
+      return res.status(HttpStatus.OK).json({ categories: listCategories });
     } catch (error) {
       if (error instanceof HttpException) {
         return res.status(error.getStatus()).json({
@@ -208,12 +205,10 @@ export class AdminService {
       }
     }
   }
-  async listBookings(@Res() res: Response) {
+  async listBookings(res: Response) {
     try {
       const listBookings = await this._adminRepository.bookingFindAll();
-      return res
-        .status(HttpStatus.OK)
-        .json({ message: 'Success', bookings: listBookings });
+      return res.status(HttpStatus.OK).json({ bookings: listBookings });
     } catch (error) {
       if (error instanceof HttpException) {
         return res.status(error.getStatus()).json({
@@ -226,22 +221,7 @@ export class AdminService {
       }
     }
   }
-  async logOut(@Res() res: Response) {
-    try {
-      return res.status(HttpStatus.OK).json({ message: 'Success' });
-    } catch (error) {
-      if (error instanceof HttpException) {
-        return res.status(error.getStatus()).json({
-          message: error.message,
-        });
-      } else {
-        return res.status(HttpStatus.INTERNAL_SERVER_ERROR).json({
-          message: 'Internal Server Error',
-        });
-      }
-    }
-  }
-  async listUnlist(@Res() res: Response, id: string) {
+  async listUnlist(res: Response, id: string) {
     try {
       const listCheck = await this._adminRepository.categoryFind(id);
       if (listCheck[0]['list'] === true) {
@@ -264,7 +244,7 @@ export class AdminService {
     }
   }
   async cancelBooking(
-    @Res() res: Response,
+    res: Response,
     textArea: string,
     bookingId: string,
     userId: string,
@@ -276,7 +256,7 @@ export class AdminService {
         textArea,
         bookingId,
       );
-      return res.status(HttpStatus.ACCEPTED).json({ message: 'Success' });
+      return res.status(HttpStatus.ACCEPTED);
     } catch (error) {
       if (error instanceof HttpException) {
         return res.status(error.getStatus()).json({
@@ -289,12 +269,10 @@ export class AdminService {
       }
     }
   }
-  async listServices(@Res() res: Response) {
+  async listServices(res: Response) {
     try {
       const listServices = await this._adminRepository.servicerFindAll();
-      return res
-        .status(HttpStatus.OK)
-        .json({ message: 'Success', services: listServices });
+      return res.status(HttpStatus.OK).json({ services: listServices });
     } catch (error) {
       if (error instanceof HttpException) {
         return res.status(error.getStatus()).json({
@@ -307,7 +285,7 @@ export class AdminService {
       }
     }
   }
-  async blockServicer(@Res() res: Response, id: string) {
+  async blockServicer(res: Response, id: string) {
     try {
       const findServicer = await this._adminRepository.servicerFindId(id);
       if (findServicer['isBlocked']) {
@@ -330,14 +308,14 @@ export class AdminService {
     }
   }
   async updateCategory(
-    @Res() res: Response,
+    res: Response,
     id: string,
     categoryName: string,
     description: string,
   ) {
     try {
       await this._adminRepository.categoryUpdate(id, categoryName, description);
-      return res.status(HttpStatus.ACCEPTED).json({ message: 'Success' });
+      return res.status(HttpStatus.ACCEPTED);
     } catch (error) {
       if (error instanceof HttpException) {
         return res.status(error.getStatus()).json({
@@ -387,7 +365,7 @@ export class AdminService {
       const { bannerName, description } = banner;
       const image = await this._cloudinary.uploadImage(images['images']);
       await this._adminRepository.createBanner(bannerName, description, image);
-      return res.status(HttpStatus.CREATED).json({ message: 'Success' });
+      return res.status(HttpStatus.CREATED);
     } catch (error) {
       if (error instanceof HttpException) {
         return res.status(error.getStatus()).json({
@@ -400,7 +378,7 @@ export class AdminService {
       }
     }
   }
-  async listBanners(@Res() res: Response) {
+  async listBanners(res: Response) {
     try {
       const banners = await this._adminRepository.listBanners();
       return res.status(HttpStatus.OK).json({ banners });

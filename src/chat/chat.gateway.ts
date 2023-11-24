@@ -8,6 +8,7 @@ import {
 import { ChatService } from './chat.service';
 import { Server, Socket } from 'socket.io';
 import * as dotenv from 'dotenv';
+import { ChatDto } from './dto/create-chat.dto';
 dotenv.config();
 
 @WebSocketGateway({
@@ -38,7 +39,7 @@ export class ChatGateway {
     client.broadcast.to(roomName.Roomid).emit('member-joined');
   }
   @SubscribeMessage('new-message')
-  async handleNewMessage(@MessageBody() data: any) {
+  async handleNewMessage(@MessageBody() data: ChatDto): Promise<void> {
     const newMessage = await this._chatService.newMessage(data);
     this.server.to(data.id).emit('new-message', newMessage);
   }

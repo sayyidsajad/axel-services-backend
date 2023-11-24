@@ -1,10 +1,4 @@
-import {
-  HttpException,
-  HttpStatus,
-  Injectable,
-  Res,
-  UploadedFiles,
-} from '@nestjs/common';
+import { HttpException, HttpStatus, Injectable } from '@nestjs/common';
 import {
   CreateServicerDto,
   servicerProcedures,
@@ -30,10 +24,7 @@ export class ServicerService {
     private _cloudinary: CloudinaryService,
     private _configService: ConfigService,
   ) {}
-  async servicerRegister(
-    createServicerDto: CreateServicerDto,
-    @Res() res: Response,
-  ) {
+  async servicerRegister(createServicerDto: CreateServicerDto, res: Response) {
     try {
       const { companyName, email, password, phone } = createServicerDto;
       const adminEmail = this._configService.get<string>('ADMIN_EMAIL');
@@ -95,7 +86,7 @@ export class ServicerService {
       }
     }
   }
-  async servicerLogin(loggedServicer: loggedUserDto, @Res() res: Response) {
+  async servicerLogin(loggedServicer: loggedUserDto, res: Response) {
     try {
       const { email, password } = loggedServicer;
       const searchEmail =
@@ -144,8 +135,8 @@ export class ServicerService {
 
   async servicerProcedures(
     data: servicerProcedures,
-    @Res() res: Response,
-    @UploadedFiles() files: Array<Express.Multer.File>,
+    res: Response,
+    files: Array<Express.Multer.File>,
     id: string,
   ) {
     try {
@@ -189,7 +180,7 @@ export class ServicerService {
       }
     }
   }
-  async servicerDashboard(@Res() res: Response) {
+  async servicerDashboard(res: Response) {
     try {
       const servicesFind = await this._servicerRepository.servicerDashboard();
       return res.status(HttpStatus.OK).json({ servicesFind });
@@ -205,7 +196,7 @@ export class ServicerService {
       }
     }
   }
-  async servicerDetails(@Res() res: Response, id: string) {
+  async servicerDetails(res: Response, id: string) {
     try {
       const servicesFind = await this._servicerRepository.servicerDetails(id);
       return res.status(HttpStatus.OK).json({ servicesFind });
@@ -221,7 +212,7 @@ export class ServicerService {
       }
     }
   }
-  async servicersApproval(@Res() res: Response) {
+  async servicersApproval(res: Response) {
     try {
       const servicesFind = await this._servicerRepository.serviceFindAll();
       return res
@@ -239,7 +230,7 @@ export class ServicerService {
       }
     }
   }
-  async approveServicer(@Res() res: Response) {
+  async approveServicer(res: Response) {
     try {
       const servicesFind = await this._servicerRepository.approveServicer();
       return res
@@ -257,7 +248,7 @@ export class ServicerService {
       }
     }
   }
-  async sendMail(@Res() res: Response, id: string) {
+  async sendMail(res: Response, id: string) {
     try {
       const findEmail = await this._servicerRepository.servicerFindId(id);
       const otp = await otpGenerator.generate(4, {
@@ -310,7 +301,7 @@ export class ServicerService {
       }
     }
   }
-  async loadDashboard(@Res() res: Response, id: string) {
+  async loadDashboard(res: Response, id: string) {
     try {
       await this._servicerRepository.loadDashboard(id);
       const payload = { token: id };
@@ -330,7 +321,7 @@ export class ServicerService {
       }
     }
   }
-  async categoriesList(@Res() res: Response) {
+  async categoriesList(res: Response) {
     try {
       const categories = await this._servicerRepository.categoriesList();
       return res
@@ -348,7 +339,7 @@ export class ServicerService {
       }
     }
   }
-  async listBookings(@Res() res: Response) {
+  async listBookings(res: Response) {
     try {
       const listBookings = await this._servicerRepository.bookingsList();
       return res
@@ -366,7 +357,7 @@ export class ServicerService {
       }
     }
   }
-  async approveBooking(@Res() res: Response, id: string) {
+  async approveBooking(res: Response, id: string) {
     try {
       const booked = await this._servicerRepository.bookingFindId(id);
       if (booked['approvalStatus'] === 'Pending') {
@@ -387,23 +378,8 @@ export class ServicerService {
       }
     }
   }
-  async logOut(@Res() res: Response) {
-    try {
-      return res.status(HttpStatus.OK).json({ message: 'Success' });
-    } catch (error) {
-      if (error instanceof HttpException) {
-        return res.status(error.getStatus()).json({
-          message: error.message,
-        });
-      } else {
-        return res.status(HttpStatus.INTERNAL_SERVER_ERROR).json({
-          message: 'Internal Server Error',
-        });
-      }
-    }
-  }
   async cancelBooking(
-    @Res() res: Response,
+    res: Response,
     textArea: string,
     bookingId: string,
     userId: string,

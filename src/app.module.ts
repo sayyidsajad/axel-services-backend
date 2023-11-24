@@ -17,6 +17,8 @@ import { ChatModule } from './chat/chat.module';
 import { HttpExceptionFilter } from './exceptions/http-exception.filter';
 import { APP_FILTER } from '@nestjs/core';
 import { OpenAiModule } from './open-ai/open-ai.module';
+import { ScheduleModule } from '@nestjs/schedule';
+import { TasksModule } from './tasks/tasks.module';
 dotenv.config();
 
 @Module({
@@ -51,10 +53,12 @@ dotenv.config();
       },
       preview: true,
     }),
+    ScheduleModule.forRoot(),
     AuthModule,
     CloudinaryModule,
     ChatModule,
     OpenAiModule,
+    TasksModule,
   ],
   controllers: [AppController],
   providers: [

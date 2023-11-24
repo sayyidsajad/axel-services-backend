@@ -6,16 +6,20 @@ export class UpdateUserDto extends PartialType(CreateUserDto) {
   @IsString()
   @IsNotEmpty()
   name: string;
+
   @IsString()
   @IsEmail()
   @IsNotEmpty()
   email: string;
+
   @IsNumber()
   @IsNotEmpty()
   phone: number;
+
   @IsString()
   @IsNotEmpty()
   password: string;
+
   @IsString()
   @IsNotEmpty()
   confirmPassword: string;

@@ -89,11 +89,6 @@ export class ServicerController {
   async servicesList(@Res() res: Response) {
     return this._servicerService.categoriesList(res);
   }
-  @Get('logOut')
-  @UsePipes(new ValidationPipe({ transform: true }))
-  async logOut(@Res() res: Response) {
-    return this._servicerService.logOut(res);
-  }
   @Get('listBookings')
   @UsePipes(new ValidationPipe({ transform: true }))
   async listBookings(@Res() res: Response) {
