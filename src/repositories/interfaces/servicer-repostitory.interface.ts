@@ -42,4 +42,13 @@ export interface IServicerRepository {
   bookingFindId(id: string): Promise<BookingDto>;
   monthlyEarning(id: string): Promise<any>;
   currentYearEarning(id: string): Promise<any>;
+  createService(
+    serviceName: string,
+    description: string,
+    amount: number,
+    image: (UploadApiResponse | UploadApiErrorResponse)[],
+  ): Promise<any>;
+  additionalServices(): Promise<any>;
+  listUnlist(id: string, list: boolean): Promise<void>;
+  findAdditional(id: string): Promise<any>;
 }

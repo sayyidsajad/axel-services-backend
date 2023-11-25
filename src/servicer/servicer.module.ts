@@ -1,7 +1,10 @@
 import { Module } from '@nestjs/common';
 import { ServicerService } from './servicer.service';
 import { ServicerController } from './servicer.controller';
-import { servicerProviders } from './servicer.providers';
+import {
+  additionalServicesProviders,
+  servicerProviders,
+} from './servicer.providers';
 import { DatabaseModule } from 'src/config/database/database.module';
 import { CloudinaryModule } from 'src/cloudinary/cloudinary.module';
 import { ConfigModule } from '@nestjs/config';
@@ -22,6 +25,7 @@ import { ServicerRepository } from 'src/repositories/base/servicer.repository';
     ...bookingProviders,
     ...usersProviders,
     ...messagingsProviders,
+    ...additionalServicesProviders,
   ],
 })
 export class ServicerModule {}

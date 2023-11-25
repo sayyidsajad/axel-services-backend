@@ -19,6 +19,8 @@ export class ServicerRepository implements IServicerRepository {
     private _userModel: Model<any>,
     @Inject('MESSAGING_MODEL')
     private _messagingModel: Model<any>,
+    @Inject('ADDITIONAL_SERVICES_MODEL')
+    private _additionalServices: Model<any>,
   ) {}
   async servicerDashboard(): Promise<Servicer> {
     return await this._servicerModel.aggregate([
@@ -250,5 +252,33 @@ export class ServicerRepository implements IServicerRepository {
       },
     ]);
     return result.length > 0 ? result[0].totalEarnings : 0;
+  }
+  async createService(
+    service: string,
+    description: string,
+    amount: number,
+    image: (UploadApiResponse | UploadApiErrorResponse)[],
+  ): Promise<any> {
+    const newService = new this._additionalServices({
+      service: service,
+      description: description,
+      amount: amount,
+      image: image[0].secure_url,
+    });
+    return await newService.save();
+  }
+  async additionalServices(): Promise<any> {
+    return await this._additionalServices.find({});
+  }
+  async listUnlist(id: string, list: boolean): Promise<void> {
+    await this._additionalServices.updateOne(
+      { _id: id },
+      { $set: { list: list } },
+    );
+  }
+  async findAdditional(id: string): Promise<any> {
+    return await this._additionalServices.findOne({
+      _id: id,
+    });
   }
 }

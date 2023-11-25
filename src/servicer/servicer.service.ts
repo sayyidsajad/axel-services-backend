@@ -545,4 +545,69 @@ export class ServicerService {
       }
     }
   }
+  async createService(
+    res: Response,
+    data: any,
+    file: Array<Express.Multer.File>,
+  ) {
+    try {
+      const image = await this._cloudinary.uploadImage(file['image']);
+      const { service, description, amount } = data;
+      await this._servicerRepository.createService(
+        service,
+        description,
+        amount,
+        image,
+      );
+      return res.status(HttpStatus.CREATED).json({ message: 'Created' });
+    } catch (error) {
+      if (error instanceof HttpException) {
+        return res.status(error.getStatus()).json({
+          message: error.message,
+        });
+      } else {
+        return res.status(HttpStatus.INTERNAL_SERVER_ERROR).json({
+          message: 'Internal Server Error',
+        });
+      }
+    }
+  }
+  async additionalLists(res: Response) {
+    try {
+      const additional = await this._servicerRepository.additionalServices();
+      return res.status(HttpStatus.OK).json({ additional });
+    } catch (error) {
+      if (error instanceof HttpException) {
+        return res.status(error.getStatus()).json({
+          message: error.message,
+        });
+      } else {
+        return res.status(HttpStatus.INTERNAL_SERVER_ERROR).json({
+          message: 'Internal Server Error',
+        });
+      }
+    }
+  }
+  async listUnlist(res: Response, id: string) {
+    try {
+      const additional = await this._servicerRepository.findAdditional(id);
+      if (additional['list'] === true) {
+        await this._servicerRepository.listUnlist(id, false);
+        return res.status(HttpStatus.ACCEPTED).json({ message: 'Unlisted' });
+      } else {
+        await this._servicerRepository.listUnlist(id, true);
+      }
+      return res.status(HttpStatus.ACCEPTED).json({ message: 'Listed' });
+    } catch (error) {
+      if (error instanceof HttpException) {
+        return res.status(error.getStatus()).json({
+          message: error.message,
+        });
+      } else {
+        return res.status(HttpStatus.INTERNAL_SERVER_ERROR).json({
+          message: 'Internal Server Error',
+        });
+      }
+    }
+  }
 }

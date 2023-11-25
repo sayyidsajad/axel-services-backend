@@ -12,6 +12,8 @@ import {
   Req,
   UseFilters,
   UploadedFiles,
+  UploadedFile,
+  Patch,
 } from '@nestjs/common';
 import { ServicerService } from './servicer.service';
 import {
@@ -20,7 +22,10 @@ import {
   servicerProcedures,
 } from './dto/create-servicer.dto';
 import { Response } from 'express';
-import { FileFieldsInterceptor } from '@nestjs/platform-express';
+import {
+  FileFieldsInterceptor,
+  FileInterceptor,
+} from '@nestjs/platform-express';
 import { HttpExceptionFilter } from 'src/exceptions/http-exception.filter';
 
 @Controller('servicer')
@@ -134,5 +139,25 @@ export class ServicerController {
   @UsePipes(new ValidationPipe({ transform: true }))
   async dashboardReports(@Res() res: Response, @Req() req: Request) {
     return this._servicerService.dashboardReports(res, req);
+  }
+  @Post('createService')
+  @UsePipes(new ValidationPipe({ transform: true }))
+  @UseInterceptors(FileFieldsInterceptor([{ name: 'image', maxCount: 1 }]))
+  async createService(
+    @Res() res: Response,
+    @Body() data: any,
+    @UploadedFiles() files: Array<Express.Multer.File>,
+  ) {
+    return this._servicerService.createService(res, data, files);
+  }
+  @Get('additionalList')
+  @UsePipes(new ValidationPipe({ transform: true }))
+  async additionalServices(@Res() res: Response) {
+    return this._servicerService.additionalLists(res);
+  }
+  @Patch('listUnlist')
+  @UsePipes(new ValidationPipe({ transform: true }))
+  async listUnlist(@Res() res: Response, @Body('id') id: string) {
+    return this._servicerService.listUnlist(res, id);
   }
 }
