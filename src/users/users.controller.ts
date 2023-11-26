@@ -8,8 +8,10 @@ import {
   Query,
   Patch,
   ValidationPipe,
+  UseInterceptors,
   UsePipes,
   UseFilters,
+  UploadedFiles,
 } from '@nestjs/common';
 import { UsersService } from './users.service';
 import {
@@ -20,6 +22,7 @@ import {
 import { PaymentVerificationDto } from './dto/verify-payment.dto';
 import { Response } from 'express';
 import { HttpExceptionFilter } from 'src/exceptions/http-exception.filter';
+import { FileFieldsInterceptor } from '@nestjs/platform-express';
 
 @Controller()
 @UseFilters(new HttpExceptionFilter())
@@ -164,5 +167,20 @@ export class UsersController {
   @UsePipes(new ValidationPipe({ transform: true }))
   async listBanners(@Res() res: Response) {
     return this._usersService.listBanners(res);
+  }
+  @Get('additionalList')
+  @UsePipes(new ValidationPipe({ transform: true }))
+  async additionalServices(@Res() res: Response, @Query('id') id: string) {
+    return this._usersService.additionalLists(res, id);
+  }
+  @Patch('profilePicture')
+  @UsePipes(new ValidationPipe({ transform: true }))
+  @UseInterceptors(FileFieldsInterceptor([{ name: 'img', maxCount: 1 }]))
+  async profilePicture(
+    @Req() req: Request,
+    @Res() res: Response,
+    @UploadedFiles() files: Array<Express.Multer.File>,
+  ) {
+    return this._usersService.profilePicture(req, res, files);
   }
 }

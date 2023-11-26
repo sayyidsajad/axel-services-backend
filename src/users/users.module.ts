@@ -4,7 +4,10 @@ import { reviewsProviders, usersProviders } from './users.providers';
 import { DatabaseModule } from '../config/database/database.module';
 import { UsersService } from './users.service';
 import { ConfigModule } from '@nestjs/config';
-import { servicerProviders } from 'src/servicer/servicer.providers';
+import {
+  additionalServicesProviders,
+  servicerProviders,
+} from 'src/servicer/servicer.providers';
 import * as dotenv from 'dotenv';
 import {
   EnquiryProviders,
@@ -14,12 +17,14 @@ import {
 import { TwilioModule } from 'nestjs-twilio';
 import { messagingsProviders } from 'src/chat/chat.providers';
 import { UserRepository } from 'src/repositories/base/user.repository';
+import { CloudinaryModule } from 'src/cloudinary/cloudinary.module';
 dotenv.config();
 
 @Module({
   imports: [
     DatabaseModule,
     ConfigModule,
+    CloudinaryModule,
     TwilioModule.forRoot({
       accountSid: process.env.TWILIO_ACCOUNT_SID,
       authToken: process.env.TWILIO_AUTH_TOKEN,
@@ -36,6 +41,7 @@ dotenv.config();
     ...EnquiryProviders,
     ...reviewsProviders,
     ...bannerProviders,
+    ...additionalServicesProviders,
   ],
   exports: [UsersService],
 })

@@ -254,12 +254,14 @@ export class ServicerRepository implements IServicerRepository {
     return result.length > 0 ? result[0].totalEarnings : 0;
   }
   async createService(
+    servicerId: string,
     service: string,
     description: string,
     amount: number,
     image: (UploadApiResponse | UploadApiErrorResponse)[],
   ): Promise<any> {
     const newService = new this._additionalServices({
+      servicerId: servicerId,
       service: service,
       description: description,
       amount: amount,
@@ -267,8 +269,8 @@ export class ServicerRepository implements IServicerRepository {
     });
     return await newService.save();
   }
-  async additionalServices(): Promise<any> {
-    return await this._additionalServices.find({});
+  async additionalServices(servicerId: string): Promise<any> {
+    return await this._additionalServices.find({ servicerId: servicerId });
   }
   async listUnlist(id: string, list: boolean): Promise<void> {
     await this._additionalServices.updateOne(

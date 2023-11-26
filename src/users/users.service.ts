@@ -15,6 +15,7 @@ import { ConfigService } from '@nestjs/config';
 import * as moment from 'moment';
 import { TwilioService } from 'nestjs-twilio';
 import { UserRepository } from 'src/repositories/base/user.repository';
+import { CloudinaryService } from 'src/cloudinary/cloudinary.service';
 dotenv.config();
 
 @Injectable()
@@ -25,6 +26,7 @@ export class UsersService {
     private _userRepository: UserRepository,
     private readonly _mailerService: MailerService,
     private readonly _twilioService: TwilioService,
+    private _cloudinary: CloudinaryService,
   ) {}
   async userRegister(
     createUserDto: CreateUserDto,
@@ -599,6 +601,8 @@ export class UsersService {
       const reviews = await this._userRepository.reviewsList(id);
       return res.status(HttpStatus.ACCEPTED).json({ reviews });
     } catch (error) {
+      console.log(error);
+
       if (error instanceof HttpException) {
         return res.status(error.getStatus()).json({
           message: error.message,
@@ -614,6 +618,47 @@ export class UsersService {
     try {
       const banners = await this._userRepository.listBanners();
       return res.status(HttpStatus.OK).json({ banners });
+    } catch (error) {
+      if (error instanceof HttpException) {
+        return res.status(error.getStatus()).json({
+          message: error.message,
+        });
+      } else {
+        return res.status(HttpStatus.INTERNAL_SERVER_ERROR).json({
+          message: 'Internal Server Error',
+        });
+      }
+    }
+  }
+  async additionalLists(res: Response, id: string) {
+    try {
+      const additional = await this._userRepository.additionalServices(id);
+      return res.status(HttpStatus.OK).json({ additional });
+    } catch (error) {
+      if (error instanceof HttpException) {
+        return res.status(error.getStatus()).json({
+          message: error.message,
+        });
+      } else {
+        return res.status(HttpStatus.INTERNAL_SERVER_ERROR).json({
+          message: 'Internal Server Error',
+        });
+      }
+    }
+  }
+  async profilePicture(
+    req: Request,
+    res: Response,
+    files: Array<Express.Multer.File>,
+  ) {
+    try {
+      const image = await this._cloudinary.uploadImage(files['img']);
+      const authHeader = req.headers['authorization'];
+      const token = authHeader.split(' ')[1];
+      const decoded = await this._jwtService.verify(token);
+      const userId = decoded.token;
+      await this._userRepository.profilePicture(userId, image);
+      return res.status(HttpStatus.ACCEPTED).json({ message: 'Success' });
     } catch (error) {
       if (error instanceof HttpException) {
         return res.status(error.getStatus()).json({

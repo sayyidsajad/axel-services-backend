@@ -1,6 +1,7 @@
 import { User } from 'src/users/entities/user.entity';
 import { Servicer } from 'src/servicer/entities/servicer.entity';
 import { BookingDto } from 'src/admin/dto/booking.dto';
+import { UploadApiResponse, UploadApiErrorResponse } from 'cloudinary';
 
 export interface IUserRepository {
   findAllUsers(): Promise<any[]>;
@@ -42,4 +43,9 @@ export interface IUserRepository {
   review(servicerId: string, userId: string, message: string): Promise<void>;
   reviewsList(servicerId: string): Promise<any>;
   listBanners(): Promise<any>;
+  additionalServices(id: string): Promise<any>;
+  profilePicture(
+    id: string,
+    image: (UploadApiResponse | UploadApiErrorResponse)[],
+  ): Promise<void>;
 }

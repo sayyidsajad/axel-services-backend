@@ -1,4 +1,3 @@
-/* eslint-disable @typescript-eslint/no-unused-vars */
 import {
   Controller,
   Get,
@@ -12,7 +11,6 @@ import {
   Req,
   UseFilters,
   UploadedFiles,
-  UploadedFile,
   Patch,
 } from '@nestjs/common';
 import { ServicerService } from './servicer.service';
@@ -22,10 +20,7 @@ import {
   servicerProcedures,
 } from './dto/create-servicer.dto';
 import { Response } from 'express';
-import {
-  FileFieldsInterceptor,
-  FileInterceptor,
-} from '@nestjs/platform-express';
+import { FileFieldsInterceptor } from '@nestjs/platform-express';
 import { HttpExceptionFilter } from 'src/exceptions/http-exception.filter';
 
 @Controller('servicer')
@@ -144,16 +139,17 @@ export class ServicerController {
   @UsePipes(new ValidationPipe({ transform: true }))
   @UseInterceptors(FileFieldsInterceptor([{ name: 'image', maxCount: 1 }]))
   async createService(
+    @Req() req: Request,
     @Res() res: Response,
     @Body() data: any,
     @UploadedFiles() files: Array<Express.Multer.File>,
   ) {
-    return this._servicerService.createService(res, data, files);
+    return this._servicerService.createService(req, res, data, files);
   }
   @Get('additionalList')
   @UsePipes(new ValidationPipe({ transform: true }))
-  async additionalServices(@Res() res: Response) {
-    return this._servicerService.additionalLists(res);
+  async additionalServices(@Res() res: Response, @Req() req: Request) {
+    return this._servicerService.additionalLists(req, res);
   }
   @Patch('listUnlist')
   @UsePipes(new ValidationPipe({ transform: true }))

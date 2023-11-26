@@ -5,7 +5,7 @@ export const ServicerSchema = new mongoose.Schema({
   email: { type: String, required: true },
   phone: { type: Number, required: true },
   password: { type: String, required: true },
-  category: { type: mongoose.Schema.ObjectId, ref: 'CATEGORY_MODEL' },
+  category: { type: mongoose.Schema.ObjectId, ref: 'Category' },
   serviceName: String,
   description: String,
   amount: Number,

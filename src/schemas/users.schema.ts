@@ -9,10 +9,11 @@ export const UserSchema = new mongoose.Schema(
     isBlocked: { type: Boolean, default: false, required: true },
     isVerified: { type: Boolean, default: false, required: true },
     googleAuth: { type: Boolean, default: false, required: true },
+    image: String,
     inbox: {
       type: Array,
       cancelReason: { type: String },
-      bookingId: { types: mongoose.Schema.ObjectId, ref: 'BOOKING_MODEL' },
+      bookingId: { types: mongoose.Schema.ObjectId, ref: 'Booking' },
     },
     wallet: {
       type: Number,

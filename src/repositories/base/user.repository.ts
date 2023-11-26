@@ -8,6 +8,7 @@ import * as bcrypt from 'bcrypt';
 import { Servicer } from 'src/servicer/entities/servicer.entity';
 import { BookingDto } from 'src/admin/dto/booking.dto';
 import { IBanner } from './types/admin/admin-types';
+import { UploadApiResponse, UploadApiErrorResponse } from 'cloudinary';
 
 export class UserRepository implements IUserRepository {
   constructor(
@@ -25,6 +26,8 @@ export class UserRepository implements IUserRepository {
     private _reviewModel: Model<any>,
     @Inject('BANNER_MODEL')
     private _bannerModel: Model<any>,
+    @Inject('ADDITIONAL_SERVICES_MODEL')
+    private _additionalServices: Model<any>,
   ) {}
   async findAllUsers(): Promise<any[]> {
     const users = await this._userModel.aggregate([
@@ -268,25 +271,23 @@ export class UserRepository implements IUserRepository {
     await review.save();
   }
   async reviewsList(servicerId: string): Promise<any> {
-    return await this._reviewModel.aggregate([
-      {
-        $match: {
-          servicer: new mongoose.Types.ObjectId(servicerId),
-        },
-      },
-      {
-        $lookup: {
-          from: 'USER_MODEL',
-          localField: 'user',
-          foreignField: '_id',
-          as: 'users',
-        },
-      },
-    ]);
-
-    // Process the reviews as needed
+    return await this._reviewModel
+      .find({ servicer: new mongoose.Types.ObjectId(servicerId) })
+      .populate('user');
   }
   async listBanners(): Promise<IBanner[]> {
     return await this._bannerModel.find();
+  }
+  async additionalServices(id: string): Promise<any> {
+    return await this._additionalServices.find({ servicerId: id });
+  }
+  async profilePicture(
+    id: string,
+    image: (UploadApiResponse | UploadApiErrorResponse)[],
+  ): Promise<void> {
+    await this._userModel.updateOne(
+      { _id: id },
+      { $set: { image: image[0].secure_url } },
+    );
   }
 }

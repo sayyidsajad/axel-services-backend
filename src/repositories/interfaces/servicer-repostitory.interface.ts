@@ -43,12 +43,13 @@ export interface IServicerRepository {
   monthlyEarning(id: string): Promise<any>;
   currentYearEarning(id: string): Promise<any>;
   createService(
+    servicerId: string,
     serviceName: string,
     description: string,
     amount: number,
     image: (UploadApiResponse | UploadApiErrorResponse)[],
   ): Promise<any>;
-  additionalServices(): Promise<any>;
+  additionalServices(servicerId: string): Promise<any>;
   listUnlist(id: string, list: boolean): Promise<void>;
   findAdditional(id: string): Promise<any>;
 }

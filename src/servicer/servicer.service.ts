@@ -546,6 +546,7 @@ export class ServicerService {
     }
   }
   async createService(
+    req: Request,
     res: Response,
     data: any,
     file: Array<Express.Multer.File>,
@@ -553,7 +554,12 @@ export class ServicerService {
     try {
       const image = await this._cloudinary.uploadImage(file['image']);
       const { service, description, amount } = data;
+      const authHeader = req.headers['authorization'];
+      const token = authHeader.split(' ')[1];
+      const decoded = await this._jwtService.verify(token);
+      const servicerId = decoded.token;
       await this._servicerRepository.createService(
+        servicerId,
         service,
         description,
         amount,
@@ -572,9 +578,14 @@ export class ServicerService {
       }
     }
   }
-  async additionalLists(res: Response) {
+  async additionalLists(req: Request, res: Response) {
     try {
-      const additional = await this._servicerRepository.additionalServices();
+      const authHeader = req.headers['authorization'];
+      const token = authHeader.split(' ')[1];
+      const decoded = await this._jwtService.verify(token);
+      const servicerId = decoded.token;
+      const additional =
+        await this._servicerRepository.additionalServices(servicerId);
       return res.status(HttpStatus.OK).json({ additional });
     } catch (error) {
       if (error instanceof HttpException) {
