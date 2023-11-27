@@ -262,8 +262,14 @@ export class UsersService {
     walletChecked?: number,
   ) {
     try {
+      console.log(date);
+      console.log(time);
+      
+      
       const updatedDate = moment(date).format('DD-MM-YYYY');
       const updateTime = moment(time).format('hh:mm A');
+      console.log(updatedDate, updateTime);
+
       const authHeader = req.headers['authorization'];
       const token = authHeader.split(' ')[1];
       const decoded = this._jwtService.verify(token);
@@ -601,8 +607,6 @@ export class UsersService {
       const reviews = await this._userRepository.reviewsList(id);
       return res.status(HttpStatus.ACCEPTED).json({ reviews });
     } catch (error) {
-      console.log(error);
-
       if (error instanceof HttpException) {
         return res.status(error.getStatus()).json({
           message: error.message,
@@ -659,6 +663,23 @@ export class UsersService {
       const userId = decoded.token;
       await this._userRepository.profilePicture(userId, image);
       return res.status(HttpStatus.ACCEPTED).json({ message: 'Success' });
+    } catch (error) {
+      if (error instanceof HttpException) {
+        return res.status(error.getStatus()).json({
+          message: error.message,
+        });
+      } else {
+        return res.status(HttpStatus.INTERNAL_SERVER_ERROR).json({
+          message: 'Internal Server Error',
+        });
+      }
+    }
+  }
+  async filterDates(req: Request, res: Response, id: string) {
+    try {
+      const filterDates = await this._userRepository.filterDates(id);
+      const filterTimes = await this._userRepository.filterTimes(id);
+      return res.status(HttpStatus.ACCEPTED).json({ filterDates, filterTimes });
     } catch (error) {
       if (error instanceof HttpException) {
         return res.status(error.getStatus()).json({

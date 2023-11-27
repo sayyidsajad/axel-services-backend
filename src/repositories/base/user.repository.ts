@@ -290,4 +290,20 @@ export class UserRepository implements IUserRepository {
       { $set: { image: image[0].secure_url } },
     );
   }
+  async filterDates(id: string): Promise<any> {
+    const filteredBookings = await this._bookingModel
+      .find({ service: id })
+      .select('date')
+      .populate('service');
+    const dates = filteredBookings.map((booking) => booking.date);
+    return dates;
+  }
+  async filterTimes(id: string): Promise<any> {
+    const filteredBookings = await this._bookingModel
+      .find({ service: id })
+      .select('time')
+      .populate('service');
+    const times = filteredBookings.map((booking) => booking.time);
+    return times;
+  }
 }

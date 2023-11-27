@@ -183,4 +183,13 @@ export class UsersController {
   ) {
     return this._usersService.profilePicture(req, res, files);
   }
+  @Get('filterDates')
+  @UsePipes(new ValidationPipe({ transform: true }))
+  async filterDates(
+    @Req() req: Request,
+    @Res() res: Response,
+    @Query('id') id: string,
+  ) {
+    return this._usersService.filterDates(req, res, id);
+  }
 }
