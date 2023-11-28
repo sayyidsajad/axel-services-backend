@@ -12,10 +12,10 @@ import { MailerService } from '@nestjs-modules/mailer';
 import * as otpGenerator from 'otp-generator';
 import * as dotenv from 'dotenv';
 import { ConfigService } from '@nestjs/config';
-import * as moment from 'moment';
 import { TwilioService } from 'nestjs-twilio';
 import { UserRepository } from 'src/repositories/base/user.repository';
 import { CloudinaryService } from 'src/cloudinary/cloudinary.service';
+import * as moment from 'moment';
 dotenv.config();
 
 @Injectable()
@@ -257,19 +257,15 @@ export class UsersService {
     req: Request,
     res: Response,
     id: string,
-    date: Date,
+    date: string,
     time: string,
     walletChecked?: number,
   ) {
     try {
-      console.log(date);
-      console.log(time);
-      
-      
-      const updatedDate = moment(date).format('DD-MM-YYYY');
-      const updateTime = moment(time).format('hh:mm A');
-      console.log(updatedDate, updateTime);
-
+      const inputDate = moment(date);
+      const formattedDate =
+        inputDate.format('ddd MMM DD YYYY HH:mm:ss [GMT]Z') +
+        ' (India Standard Time)';
       const authHeader = req.headers['authorization'];
       const token = authHeader.split(' ')[1];
       const decoded = this._jwtService.verify(token);
@@ -287,8 +283,8 @@ export class UsersService {
         await this._userRepository.userWalletChecked(userId, walletChecked);
       }
       const inserted = await this._userRepository.createBooking(
-        updatedDate,
-        updateTime,
+        formattedDate,
+        time,
         `BK${lastValue ? ++lastValue : 1}`,
         userId,
         id,
@@ -678,8 +674,7 @@ export class UsersService {
   async filterDates(req: Request, res: Response, id: string) {
     try {
       const filterDates = await this._userRepository.filterDates(id);
-      const filterTimes = await this._userRepository.filterTimes(id);
-      return res.status(HttpStatus.ACCEPTED).json({ filterDates, filterTimes });
+      return res.status(HttpStatus.ACCEPTED).json({ filterDates });
     } catch (error) {
       if (error instanceof HttpException) {
         return res.status(error.getStatus()).json({

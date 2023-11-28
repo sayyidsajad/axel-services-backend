@@ -111,7 +111,7 @@ export class UserRepository implements IUserRepository {
   }
   async createBooking(
     updatedDate: string,
-    updateTime: string,
+    time: string,
     lastValue: string,
     userId: string,
     id: string,
@@ -119,7 +119,7 @@ export class UserRepository implements IUserRepository {
   ): Promise<BookingDto> {
     const insertBooking = new this._bookingModel({
       date: updatedDate,
-      time: updateTime,
+      time: time,
       bookingId: lastValue,
       user: userId,
       service: id,
@@ -293,17 +293,9 @@ export class UserRepository implements IUserRepository {
   async filterDates(id: string): Promise<any> {
     const filteredBookings = await this._bookingModel
       .find({ service: id })
-      .select('date')
+      .select('createdAt')
       .populate('service');
-    const dates = filteredBookings.map((booking) => booking.date);
+    const dates = filteredBookings.map((booking) => booking.createdAt);
     return dates;
-  }
-  async filterTimes(id: string): Promise<any> {
-    const filteredBookings = await this._bookingModel
-      .find({ service: id })
-      .select('time')
-      .populate('service');
-    const times = filteredBookings.map((booking) => booking.time);
-    return times;
   }
 }

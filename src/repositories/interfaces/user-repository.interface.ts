@@ -16,7 +16,7 @@ export interface IUserRepository {
   userWalletChecked(id: string, walletChecked: number): Promise<User>;
   createBooking(
     updatedDate: string,
-    updateTime: string,
+    time: string,
     lastValue: string,
     userId: string,
     id: string,
@@ -49,5 +49,4 @@ export interface IUserRepository {
     image: (UploadApiResponse | UploadApiErrorResponse)[],
   ): Promise<void>;
   filterDates(id: string): Promise<any>;
-  filterTimes(id: string): Promise<any>;
 }

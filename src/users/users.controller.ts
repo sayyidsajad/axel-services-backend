@@ -62,7 +62,7 @@ export class UsersController {
     @Req() req: Request,
     @Res() res: Response,
     @Body('id') id: string,
-    @Body('date') date: Date,
+    @Body('date') date: string,
     @Body('time') time: string,
     @Body('walletChecked') walletChecked: number,
   ) {
