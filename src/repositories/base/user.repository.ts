@@ -298,12 +298,17 @@ export class UserRepository implements IUserRepository {
     const dates = filteredBookings.map((booking) => booking.date);
     return dates;
   }
-  async filterTimes(id: string): Promise<any> {
+  async filterTimes(id: string, date: any): Promise<any> {
     const filteredBookings = await this._bookingModel
-      .find({ service: id })
+      .find({
+        service: id,
+        date: {
+          $gte: date.toISOString(),
+          $lt: new Date(date.getTime() + 24 * 60 * 60 * 1000).toISOString(),
+        },
+      })
       .select('time')
       .populate('service');
-    const times = filteredBookings.map((booking) => booking.time);
-    return times;
+    return filteredBookings.map((item) => item.time);
   }
 }

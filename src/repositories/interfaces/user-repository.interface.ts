@@ -49,5 +49,5 @@ export interface IUserRepository {
     image: (UploadApiResponse | UploadApiErrorResponse)[],
   ): Promise<void>;
   filterDates(id: string): Promise<any>;
-  filterTimes(id: string): Promise<any>;
+  filterTimes(id: string, date: any): Promise<any>;
 }

@@ -62,7 +62,7 @@ export class UsersController {
     @Req() req: Request,
     @Res() res: Response,
     @Body('id') id: string,
-    @Body('date') date: Date,
+    @Body('date') date: string,
     @Body('time') time: string,
     @Body('walletChecked') walletChecked: number,
   ) {
@@ -191,5 +191,15 @@ export class UsersController {
     @Query('id') id: string,
   ) {
     return this._usersService.filterDates(req, res, id);
+  }
+  @Post('filterTimes')
+  @UsePipes(new ValidationPipe({ transform: true }))
+  async filterTimes(
+    @Req() req: Request,
+    @Res() res: Response,
+    @Body('id') id: string,
+    @Body('date') date: string,
+  ) {
+    return this._usersService.filterTimes(req, res, id, date);
   }
 }

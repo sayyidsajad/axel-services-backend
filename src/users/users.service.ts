@@ -257,19 +257,11 @@ export class UsersService {
     req: Request,
     res: Response,
     id: string,
-    date: Date,
+    date: string,
     time: string,
     walletChecked?: number,
   ) {
     try {
-      console.log(date);
-      console.log(time);
-      
-      
-      const updatedDate = moment(date).format('DD-MM-YYYY');
-      const updateTime = moment(time).format('hh:mm A');
-      console.log(updatedDate, updateTime);
-
       const authHeader = req.headers['authorization'];
       const token = authHeader.split(' ')[1];
       const decoded = this._jwtService.verify(token);
@@ -287,8 +279,8 @@ export class UsersService {
         await this._userRepository.userWalletChecked(userId, walletChecked);
       }
       const inserted = await this._userRepository.createBooking(
-        updatedDate,
-        updateTime,
+        date,
+        time,
         `BK${lastValue ? ++lastValue : 1}`,
         userId,
         id,
@@ -678,8 +670,27 @@ export class UsersService {
   async filterDates(req: Request, res: Response, id: string) {
     try {
       const filterDates = await this._userRepository.filterDates(id);
-      const filterTimes = await this._userRepository.filterTimes(id);
-      return res.status(HttpStatus.ACCEPTED).json({ filterDates, filterTimes });
+      return res.status(HttpStatus.ACCEPTED).json({ filterDates });
+    } catch (error) {
+      if (error instanceof HttpException) {
+        return res.status(error.getStatus()).json({
+          message: error.message,
+        });
+      } else {
+        return res.status(HttpStatus.INTERNAL_SERVER_ERROR).json({
+          message: 'Internal Server Error',
+        });
+      }
+    }
+  }
+  async filterTimes(req: Request, res: Response, id: string, date: string) {
+    try {
+      const originalDate = new Date(date);
+      const filterTimes = await this._userRepository.filterTimes(
+        id,
+        originalDate,
+      );
+      return res.status(HttpStatus.ACCEPTED).json({ filterTimes });
     } catch (error) {
       if (error instanceof HttpException) {
         return res.status(error.getStatus()).json({
