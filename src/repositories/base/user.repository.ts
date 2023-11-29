@@ -307,8 +307,6 @@ export class UserRepository implements IUserRepository {
     const dates = filteredBookings.map((booking) => booking.createdAt);
     return dates;
   }
-<<<<<<< HEAD
-=======
   async filterTimes(id: string, date: any): Promise<any> {
     const filteredBookings = await this._bookingModel
       .find({
@@ -322,5 +320,4 @@ export class UserRepository implements IUserRepository {
       .populate('service');
     return filteredBookings.map((item) => item.time);
   }
->>>>>>> development
 }

@@ -12,10 +12,6 @@ import { MailerService } from '@nestjs-modules/mailer';
 import * as otpGenerator from 'otp-generator';
 import * as dotenv from 'dotenv';
 import { ConfigService } from '@nestjs/config';
-<<<<<<< HEAD
-=======
-// import * as moment from 'moment';
->>>>>>> development
 import { TwilioService } from 'nestjs-twilio';
 import { UserRepository } from 'src/repositories/base/user.repository';
 import { CloudinaryService } from 'src/cloudinary/cloudinary.service';
@@ -272,13 +268,10 @@ export class UsersService {
     walletChecked?: number,
   ) {
     try {
-<<<<<<< HEAD
       const inputDate = moment(date);
       const formattedDate =
         inputDate.format('ddd MMM DD YYYY HH:mm:ss [GMT]Z') +
         ' (India Standard Time)';
-=======
->>>>>>> development
       const authHeader = req.headers['authorization'];
       const token = authHeader.split(' ')[1];
       const decoded = this._jwtService.verify(token);
@@ -296,11 +289,7 @@ export class UsersService {
         await this._userRepository.userWalletChecked(userId, walletChecked);
       }
       const inserted = await this._userRepository.createBooking(
-<<<<<<< HEAD
         formattedDate,
-=======
-        date,
->>>>>>> development
         time,
         `BK${lastValue ? ++lastValue : 1}`,
         userId,
@@ -692,8 +681,6 @@ export class UsersService {
     try {
       const filterDates = await this._userRepository.filterDates(id);
       return res.status(HttpStatus.ACCEPTED).json({ filterDates });
-<<<<<<< HEAD
-=======
     } catch (error) {
       if (error instanceof HttpException) {
         return res.status(error.getStatus()).json({
@@ -714,7 +701,6 @@ export class UsersService {
         originalDate,
       );
       return res.status(HttpStatus.ACCEPTED).json({ filterTimes });
->>>>>>> development
     } catch (error) {
       if (error instanceof HttpException) {
         return res.status(error.getStatus()).json({
