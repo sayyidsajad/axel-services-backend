@@ -28,6 +28,8 @@ export class UserRepository implements IUserRepository {
     private _bannerModel: Model<any>,
     @Inject('ADDITIONAL_SERVICES_MODEL')
     private _additionalServices: Model<any>,
+    @Inject('CATEGORY_MODEL')
+    private _categoryModel: Model<any>,
   ) {}
   async findAllUsers(): Promise<any[]> {
     const users = await this._userModel.aggregate([
@@ -319,5 +321,47 @@ export class UserRepository implements IUserRepository {
       .select('time')
       .populate('service');
     return filteredBookings.map((item) => item.time);
+  }
+  async categoriesList(): Promise<any> {
+    const result = await this._categoryModel.aggregate([
+      {
+        $project: {
+          _id: 0,
+          categoryName: 1,
+        },
+      },
+    ]);
+    return result.map((item) => item.categoryName);
+  }
+  async findSearched(
+    search?: string,
+    categ?: string,
+    date?: string,
+  ): Promise<any> {
+    const regex = new RegExp(search, 'i');
+    const data = await this._servicerModel.aggregate([
+      {
+        $match: {
+          address: { $regex: regex },
+        },
+      },
+      {
+        $lookup: {
+          from: 'categories',
+          localField: 'category',
+          foreignField: '_id',
+          as: 'category',
+        },
+      },
+      {
+        $unwind: '$category',
+      },
+      {
+        $match: {
+          'category.categoryName': categ,
+        },
+      },
+    ]);
+    return data;
   }
 }

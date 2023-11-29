@@ -50,4 +50,6 @@ export interface IUserRepository {
   ): Promise<void>;
   filterDates(id: string): Promise<any>;
   filterTimes(id: string, date: any): Promise<any>;
+  categoriesList(): Promise<any>;
+  findSearched(search?: string, categ?: string, date?: string): Promise<any>;
 }

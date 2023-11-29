@@ -18,6 +18,7 @@ import { TwilioModule } from 'nestjs-twilio';
 import { messagingsProviders } from 'src/chat/chat.providers';
 import { UserRepository } from 'src/repositories/base/user.repository';
 import { CloudinaryModule } from 'src/cloudinary/cloudinary.module';
+import { categoryProviders } from 'src/admin/admin-category.providers';
 dotenv.config();
 
 @Module({
@@ -40,6 +41,7 @@ dotenv.config();
     ...messagingsProviders,
     ...EnquiryProviders,
     ...reviewsProviders,
+    ...categoryProviders,
     ...bannerProviders,
     ...additionalServicesProviders,
   ],

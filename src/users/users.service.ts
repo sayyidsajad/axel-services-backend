@@ -224,7 +224,7 @@ export class UsersService {
   async loadHome(res: Response, email: string) {
     try {
       await this._userRepository.userEmailUpdateOne(email);
-      return res.status(HttpStatus.CREATED);
+      return res.status(HttpStatus.CREATED).json({ message: 'Success' });
     } catch (error) {
       if (error instanceof HttpException) {
         return res.status(error.getStatus()).json({
@@ -701,6 +701,52 @@ export class UsersService {
         originalDate,
       );
       return res.status(HttpStatus.ACCEPTED).json({ filterTimes });
+    } catch (error) {
+      if (error instanceof HttpException) {
+        return res.status(error.getStatus()).json({
+          message: error.message,
+        });
+      } else {
+        return res.status(HttpStatus.INTERNAL_SERVER_ERROR).json({
+          message: 'Internal Server Error',
+        });
+      }
+    }
+  }
+  async categoriesList(res: Response) {
+    try {
+      const categories = await this._userRepository.categoriesList();
+      return res.status(HttpStatus.ACCEPTED).json({ categories });
+    } catch (error) {
+      if (error instanceof HttpException) {
+        return res.status(error.getStatus()).json({
+          message: error.message,
+        });
+      } else {
+        return res.status(HttpStatus.INTERNAL_SERVER_ERROR).json({
+          message: 'Internal Server Error',
+        });
+      }
+    }
+  }
+  async findSearched(
+    res: Response,
+    search?: string,
+    categ?: string,
+    date?: string,
+  ) {
+    try {
+      const findSearched = await this._userRepository.findSearched(
+        search,
+        categ,
+        date,
+      );
+      if (findSearched.length > 0) {
+        return res.status(HttpStatus.ACCEPTED).json({ findSearched });
+      }
+      return res
+        .status(HttpStatus.NOT_FOUND)
+        .json({ message: 'There is no Servicer on the specified filters' });
     } catch (error) {
       if (error instanceof HttpException) {
         return res.status(error.getStatus()).json({

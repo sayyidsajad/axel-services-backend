@@ -13,6 +13,7 @@ import {
   bookingProviders,
 } from 'src/admin/admin.providers';
 import { messagingsProviders } from 'src/chat/chat.providers';
+import { categoryProviders } from 'src/admin/admin-category.providers';
 
 @Module({
   imports: [DatabaseModule],
@@ -24,6 +25,7 @@ import { messagingsProviders } from 'src/chat/chat.providers';
     ...EnquiryProviders,
     ...reviewsProviders,
     ...bannerProviders,
+    ...categoryProviders,
     ...additionalServicesProviders,
     TasksService,
     UserRepository,

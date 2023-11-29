@@ -202,4 +202,19 @@ export class UsersController {
   ) {
     return this._usersService.filterTimes(req, res, id, date);
   }
+  @Get('categoriesList')
+  @UsePipes(new ValidationPipe({ transform: true }))
+  async categoriesList(@Res() res: Response) {
+    return this._usersService.categoriesList(res);
+  }
+  @Post('findSearched')
+  @UsePipes(new ValidationPipe({ transform: true }))
+  async findSearched(@Res() res: Response, @Body() data: any) {
+    return this._usersService.findSearched(
+      res,
+      data.place,
+      data.categ,
+      data.date,
+    );
+  }
 }
