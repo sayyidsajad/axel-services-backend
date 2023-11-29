@@ -84,8 +84,8 @@ export class UsersController {
   }
   @Get('servicerList')
   @UsePipes(new ValidationPipe({ transform: true }))
-  async servicerList(@Res() res: Response) {
-    return this._usersService.servicerList(res);
+  async servicerList(@Res() res: Response, @Query('page') page?: number) {
+    return this._usersService.servicerList(res, page);
   }
   @Get('userInbox')
   @UsePipes(new ValidationPipe({ transform: true }))
@@ -191,5 +191,15 @@ export class UsersController {
     @Query('id') id: string,
   ) {
     return this._usersService.filterDates(req, res, id);
+  }
+  @Post('filterTimes')
+  @UsePipes(new ValidationPipe({ transform: true }))
+  async filterTimes(
+    @Req() req: Request,
+    @Res() res: Response,
+    @Body('id') id: string,
+    @Body('date') date: string,
+  ) {
+    return this._usersService.filterTimes(req, res, id, date);
   }
 }

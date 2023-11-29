@@ -67,8 +67,8 @@ export class UserRepository implements IUserRepository {
       { $set: { isVerified: true } },
     );
   }
-  async servicerList(): Promise<Servicer[]> {
-    return await this._servicerModel.aggregate([
+  async servicerList(skip: number, limit: number): Promise<any> {
+    const serviceList = await this._servicerModel.aggregate([
       {
         $lookup: {
           from: 'categories',
@@ -83,7 +83,16 @@ export class UserRepository implements IUserRepository {
           preserveNullAndEmptyArrays: true,
         },
       },
+      {
+        $skip: skip,
+      },
+      {
+        $limit: limit,
+      },
     ]);
+    const count = await this._servicerModel.countDocuments();
+    const totalPage = Math.ceil(count / limit);
+    return { totalPage, serviceList };
   }
   async lastBookingFindOne(): Promise<BookingDto> {
     return await this._bookingModel.findOne({}).sort({ createdAt: -1 });
@@ -298,4 +307,20 @@ export class UserRepository implements IUserRepository {
     const dates = filteredBookings.map((booking) => booking.createdAt);
     return dates;
   }
+<<<<<<< HEAD
+=======
+  async filterTimes(id: string, date: any): Promise<any> {
+    const filteredBookings = await this._bookingModel
+      .find({
+        service: id,
+        date: {
+          $gte: date.toISOString(),
+          $lt: new Date(date.getTime() + 24 * 60 * 60 * 1000).toISOString(),
+        },
+      })
+      .select('time')
+      .populate('service');
+    return filteredBookings.map((item) => item.time);
+  }
+>>>>>>> development
 }
