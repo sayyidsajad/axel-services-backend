@@ -67,8 +67,8 @@ export class UserRepository implements IUserRepository {
       { $set: { isVerified: true } },
     );
   }
-  async servicerList(): Promise<Servicer[]> {
-    return await this._servicerModel.aggregate([
+  async servicerList(skip: number, limit: number): Promise<any> {
+    const serviceList = await this._servicerModel.aggregate([
       {
         $lookup: {
           from: 'categories',
@@ -83,7 +83,16 @@ export class UserRepository implements IUserRepository {
           preserveNullAndEmptyArrays: true,
         },
       },
+      {
+        $skip: skip,
+      },
+      {
+        $limit: limit,
+      },
     ]);
+    const count = await this._servicerModel.countDocuments();
+    const totalPage = Math.ceil(count / limit);
+    return { totalPage, serviceList };
   }
   async lastBookingFindOne(): Promise<BookingDto> {
     return await this._bookingModel.findOne({}).sort({ createdAt: -1 });

@@ -12,7 +12,7 @@ import { MailerService } from '@nestjs-modules/mailer';
 import * as otpGenerator from 'otp-generator';
 import * as dotenv from 'dotenv';
 import { ConfigService } from '@nestjs/config';
-import * as moment from 'moment';
+// import * as moment from 'moment';
 import { TwilioService } from 'nestjs-twilio';
 import { UserRepository } from 'src/repositories/base/user.repository';
 import { CloudinaryService } from 'src/cloudinary/cloudinary.service';
@@ -237,9 +237,15 @@ export class UsersService {
       }
     }
   }
-  async servicerList(res: Response) {
+  async servicerList(res: Response, page: number) {
     try {
-      const servicesFind = await this._userRepository.servicerList();
+      const perPage = 6;
+      const currPage = Number(page) || 1;
+      const skip = perPage * (currPage - 1);
+      const servicesFind = await this._userRepository.servicerList(
+        skip,
+        perPage,
+      );
       return res.status(HttpStatus.OK).json({ servicesFind: servicesFind });
     } catch (error) {
       if (error instanceof HttpException) {

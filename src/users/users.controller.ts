@@ -84,8 +84,8 @@ export class UsersController {
   }
   @Get('servicerList')
   @UsePipes(new ValidationPipe({ transform: true }))
-  async servicerList(@Res() res: Response) {
-    return this._usersService.servicerList(res);
+  async servicerList(@Res() res: Response, @Query('page') page?: number) {
+    return this._usersService.servicerList(res, page);
   }
   @Get('userInbox')
   @UsePipes(new ValidationPipe({ transform: true }))

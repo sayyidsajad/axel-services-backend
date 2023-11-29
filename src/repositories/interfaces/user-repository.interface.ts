@@ -10,7 +10,7 @@ export interface IUserRepository {
   createUser(user: User): Promise<User>;
   userEmailFindOne(email: string): Promise<User>;
   userEmailUpdateOne(email: string): Promise<User>;
-  servicerList(): Promise<Servicer>;
+  servicerList(skip?: number, limit?: number): Promise<Servicer>;
   lastBookingFindOne(): Promise<BookingDto>;
   servicerFindOneId(id: string): Promise<Servicer>;
   userWalletChecked(id: string, walletChecked: number): Promise<User>;
