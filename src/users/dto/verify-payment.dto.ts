@@ -4,6 +4,7 @@ export class PaymentVerificationDto {
   @IsNotEmpty()
   @IsObject()
   res: { razorpay_payment_id: string };
+
   @IsNotEmpty()
   @IsObject()
   inserted: {
@@ -24,6 +25,7 @@ export class PaymentVerificationDto {
     };
     reducedAmt: number;
   };
+
   @IsOptional()
   userid: string | undefined;
 }

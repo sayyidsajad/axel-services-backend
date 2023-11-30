@@ -1,11 +1,10 @@
 import { MailerService } from '@nestjs-modules/mailer';
-import { Injectable, Logger } from '@nestjs/common';
+import { Injectable } from '@nestjs/common';
 import { Cron, CronExpression } from '@nestjs/schedule';
 import { UserRepository } from 'src/repositories/base/user.repository';
 
 @Injectable()
 export class TasksService {
-  private readonly logger = new Logger(TasksService.name);
   constructor(
     private _userRepository: UserRepository,
     private readonly _mailerService: MailerService,

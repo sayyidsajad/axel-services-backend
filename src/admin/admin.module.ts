@@ -18,13 +18,13 @@ import { CloudinaryModule } from 'src/cloudinary/cloudinary.module';
   controllers: [AdminController],
   providers: [
     AdminService,
+    AdminRepository,
     ...servicerProviders,
     ...usersProviders,
     ...categoryProviders,
     ...bookingProviders,
     ...EnquiryProviders,
     ...bannerProviders,
-    AdminRepository,
   ],
 })
 export class AdminModule {}

@@ -4,7 +4,7 @@ import { HttpException, HttpStatus, Injectable } from '@nestjs/common';
 export class AppService {
   getHello(): string {
     try {
-      return 'Hello World!';
+      return 'Welcome to Axel Services!';
     } catch (error) {
       throw new HttpException(
         'Internal Server Error',

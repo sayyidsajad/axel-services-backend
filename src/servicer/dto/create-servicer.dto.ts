@@ -33,6 +33,7 @@ export class LoginServicerDto {
   @IsEmail()
   @IsString()
   email: string;
+
   @IsNotEmpty()
   @IsString()
   password: string;
