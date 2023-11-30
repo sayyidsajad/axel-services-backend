@@ -75,7 +75,7 @@ export class UsersService {
         return res.status(HttpStatus.CREATED).json({
           access_token: await this._jwtService.sign(payload),
           message: 'success',
-          email: email,
+          id: userDone['_id'],
         });
       } else {
         throw new HttpException('Token not available', HttpStatus.UNAUTHORIZED);
@@ -112,10 +112,10 @@ export class UsersService {
           .json({ message: 'User has been blocked by admin' });
       }
       if (userFind['isVerified'] !== true) {
-        return res.status(HttpStatus.CONTINUE).json({
+        return res.status(HttpStatus.OK).json({
           message: 'User not verified, Please verify',
           verified: false,
-          email: userFind['email'],
+          id: userFind['_id'],
         });
       }
       const payload = { token: userFind['_id'] };
@@ -163,9 +163,9 @@ export class UsersService {
       }
     }
   }
-  async sendMail(res: Response, email: string) {
+  async sendMail(res: Response, id: string) {
     try {
-      const findId = await this._userRepository.userEmailFindOne(email);
+      const findId = await this._userRepository.userFindId(id);
       const otp = await otpGenerator.generate(4, {
         digits: true,
         upperCaseAlphabets: false,
@@ -173,7 +173,7 @@ export class UsersService {
         specialChars: false,
       });
       this._mailerService.sendMail({
-        to: `${email}`,
+        to: `${findId['email']}`,
         from: process.env.DEV_MAIL,
         subject: 'Axel Services Email Verification',
         text: 'Axel Services',
@@ -221,9 +221,9 @@ export class UsersService {
       }
     }
   }
-  async loadHome(res: Response, email: string) {
+  async loadHome(res: Response, id: string) {
     try {
-      await this._userRepository.userEmailUpdateOne(email);
+      await this._userRepository.userEmailUpdateOne(id);
       return res.status(HttpStatus.CREATED).json({ message: 'Success' });
     } catch (error) {
       if (error instanceof HttpException) {
@@ -237,7 +237,7 @@ export class UsersService {
       }
     }
   }
-  async servicerList(res: Response, page: number) {
+  async servicerList(res: Response, page: number, filters: any) {
     try {
       const perPage = 6;
       const currPage = Number(page) || 1;
@@ -245,6 +245,7 @@ export class UsersService {
       const servicesFind = await this._userRepository.servicerList(
         skip,
         perPage,
+        filters,
       );
       return res.status(HttpStatus.OK).json({ servicesFind: servicesFind });
     } catch (error) {

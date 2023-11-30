@@ -63,13 +63,16 @@ export class UserRepository implements IUserRepository {
   async userEmailFindOne(email: string): Promise<User> {
     return await this._userModel.findOne({ email });
   }
-  async userEmailUpdateOne(email: string): Promise<User> {
+  async userEmailUpdateOne(id: string): Promise<User> {
     return await this._userModel.updateOne(
-      { email: email },
+      { _id: id },
       { $set: { isVerified: true } },
     );
   }
-  async servicerList(skip: number, limit: number): Promise<any> {
+  async servicerList(skip: number, limit: number, filters: any): Promise<any> {
+    const filter: any = {};
+    if (filters.category) filter.category = filters.category;
+    console.log(filter);
     const serviceList = await this._servicerModel.aggregate([
       {
         $lookup: {
@@ -85,6 +88,13 @@ export class UserRepository implements IUserRepository {
           preserveNullAndEmptyArrays: true,
         },
       },
+      ...(filters.category
+        ? [
+            {
+              $match: { 'categoryInfo.categoryName': filter.category },
+            },
+          ]
+        : []),
       {
         $skip: skip,
       },

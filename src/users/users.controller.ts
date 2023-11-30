@@ -48,13 +48,13 @@ export class UsersController {
   }
   @Get('otpVerification')
   @UsePipes(new ValidationPipe({ transform: true }))
-  async sendMail(@Query('email') email: string, @Res() res: Response) {
-    return this._usersService.sendMail(res, email);
+  async sendMail(@Query('id') id: string, @Res() res: Response) {
+    return this._usersService.sendMail(res, id);
   }
   @Patch('home')
   @UsePipes(new ValidationPipe({ transform: true }))
-  async loadHome(@Res() res: Response, @Body('email') email: string) {
-    return this._usersService.loadHome(res, email);
+  async loadHome(@Res() res: Response, @Body('id') id: string) {
+    return this._usersService.loadHome(res, id);
   }
   @Post('bookNow')
   @UsePipes(new ValidationPipe({ transform: true }))
@@ -84,8 +84,13 @@ export class UsersController {
   }
   @Get('servicerList')
   @UsePipes(new ValidationPipe({ transform: true }))
-  async servicerList(@Res() res: Response, @Query('page') page?: number) {
-    return this._usersService.servicerList(res, page);
+  async servicerList(
+    @Res() res: Response,
+    @Query('page') page?: number,
+    @Query() filters?: any,
+  ) {
+    // console.log(page, filters);
+    return this._usersService.servicerList(res, page, filters);
   }
   @Get('userInbox')
   @UsePipes(new ValidationPipe({ transform: true }))

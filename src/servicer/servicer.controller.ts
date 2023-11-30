@@ -151,6 +151,11 @@ export class ServicerController {
   async additionalServices(@Res() res: Response, @Req() req: Request) {
     return this._servicerService.additionalLists(req, res);
   }
+  @Get('getMyDetails')
+  @UsePipes(new ValidationPipe({ transform: true }))
+  async getMyDetails(@Res() res: Response, @Req() req: Request) {
+    return this._servicerService.getMyDetails(res, req);
+  }
   @Patch('listUnlist')
   @UsePipes(new ValidationPipe({ transform: true }))
   async listUnlist(@Res() res: Response, @Body('id') id: string) {

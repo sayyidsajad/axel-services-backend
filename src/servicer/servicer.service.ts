@@ -416,6 +416,11 @@ export class ServicerService {
       const servicerId = decoded.token;
       const findConnection =
         await this._servicerRepository.findConnection(servicerId);
+      if (!findConnection) {
+        return res.status(HttpStatus.OK).json({
+          message: 'No users available.',
+        });
+      }
       const userSenderTypes = findConnection.messages
         .filter((message) => message.senderType === 'User')
         .map((message) => ({
@@ -426,8 +431,9 @@ export class ServicerService {
         ...new Set(userSenderTypes.map((obj) => JSON.stringify(obj))),
       ].map((str) => JSON.parse(str as string));
       return res.status(HttpStatus.OK).json({
-        message: uniqueUserSenderTypes,
-        servicerId: servicerId,
+        message: 'Sucess',
+        uniqueUserSenderTypes,
+        servicerId,
       });
     } catch (error) {
       if (error instanceof HttpException) {
@@ -609,6 +615,26 @@ export class ServicerService {
         await this._servicerRepository.listUnlist(id, true);
       }
       return res.status(HttpStatus.ACCEPTED).json({ message: 'Listed' });
+    } catch (error) {
+      if (error instanceof HttpException) {
+        return res.status(error.getStatus()).json({
+          message: error.message,
+        });
+      } else {
+        return res.status(HttpStatus.INTERNAL_SERVER_ERROR).json({
+          message: 'Internal Server Error',
+        });
+      }
+    }
+  }
+  async getMyDetails(res: Response, req: Request) {
+    try {
+      const authHeader = req.headers['authorization'];
+      const token = authHeader.split(' ')[1];
+      const decoded = await this._jwtService.verify(token);
+      const servicerId = decoded.token;
+      const details = await this._servicerRepository.servicerFindId(servicerId);
+      return res.status(HttpStatus.ACCEPTED).json({ details });
     } catch (error) {
       if (error instanceof HttpException) {
         return res.status(error.getStatus()).json({
