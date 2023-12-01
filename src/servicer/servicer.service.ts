@@ -345,7 +345,8 @@ export class ServicerService {
       const token = authHeader.split(' ')[1];
       const decoded = await this._jwtService.verify(token);
       const servicerId = decoded.token;
-      const listBookings = await this._servicerRepository.bookingsList(servicerId);
+      const listBookings =
+        await this._servicerRepository.bookingsList(servicerId);
       return res
         .status(HttpStatus.OK)
         .json({ message: 'Success', bookings: listBookings });

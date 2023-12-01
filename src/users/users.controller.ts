@@ -231,4 +231,18 @@ export class UsersController {
   ) {
     return this._usersService.editProfile(req, res, name, phone);
   }
+  @Patch('updatePassword')
+  @UsePipes(new ValidationPipe({ transform: true }))
+  async updatePassword(
+    @Req() req: Request,
+    @Res() res: Response,
+    @Body() data: any,
+  ) {
+    return this._usersService.updatePassword(
+      req,
+      res,
+      data.currentPassword,
+      data.password,
+    );
+  }
 }

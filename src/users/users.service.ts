@@ -787,4 +787,43 @@ export class UsersService {
       }
     }
   }
+  async updatePassword(
+    req: Request,
+    res: Response,
+    currentPassword: string,
+    password: string,
+  ) {
+    try {
+      const authHeader = req.headers['authorization'];
+      const token = authHeader.split(' ')[1];
+      const decoded = await this._jwtService.verify(token);
+      const userId = decoded.token;
+      const checkPassword = this._userRepository.userFindId(userId);
+      const matchingPass = bcrypt.compare(
+        currentPassword,
+        checkPassword['password'],
+      );
+      if (!matchingPass) {
+        return res
+          .status(HttpStatus.NON_AUTHORITATIVE_INFORMATION)
+          .json({ message: "Current Password doesn't match" });
+      } else {
+        const hashedPassword = await bcrypt.hash(password, 10);
+        await this._userRepository.updatePassword(userId, hashedPassword);
+      }
+      return res
+        .status(HttpStatus.CREATED)
+        .json({ message: 'Updated Successfully' });
+    } catch (error) {
+      if (error instanceof HttpException) {
+        return res.status(error.getStatus()).json({
+          message: error.message,
+        });
+      } else {
+        return res.status(HttpStatus.INTERNAL_SERVER_ERROR).json({
+          message: 'Internal Server Error',
+        });
+      }
+    }
+  }
 }

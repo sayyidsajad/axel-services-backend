@@ -53,4 +53,5 @@ export interface IUserRepository {
   categoriesList(): Promise<any>;
   findSearched(search?: string, categ?: string, date?: string): Promise<any>;
   editProfile(userId: string, name: string, phone: number): Promise<void>;
+  updatePassword(id: string, password: string): Promise<void>;
 }

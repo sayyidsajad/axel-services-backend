@@ -298,7 +298,7 @@ export class UserRepository implements IUserRepository {
       .populate('user');
   }
   async listBanners(): Promise<IBanner[]> {
-    return await this._bannerModel.find();
+    return await this._bannerModel.find({}, { images: 1, _id: 0 });
   }
   async additionalServices(id: string): Promise<any> {
     return await this._additionalServices.find({ servicerId: id });
@@ -384,5 +384,8 @@ export class UserRepository implements IUserRepository {
       { _id: userId },
       { $set: { name: name, phone: phone } },
     );
+  }
+  async updatePassword(id: string, password: string): Promise<void> {
+    await this._userModel.updateOne({ _id: id }, { $set: { password } });
   }
 }

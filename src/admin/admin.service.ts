@@ -256,7 +256,7 @@ export class AdminService {
         textArea,
         bookingId,
       );
-      return res.status(HttpStatus.ACCEPTED);
+      return res.status(HttpStatus.ACCEPTED).json({ message: 'Success' });
     } catch (error) {
       if (error instanceof HttpException) {
         return res.status(error.getStatus()).json({
