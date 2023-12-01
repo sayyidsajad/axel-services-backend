@@ -89,7 +89,6 @@ export class UsersController {
     @Query('page') page?: number,
     @Query() filters?: any,
   ) {
-    // console.log(page, filters);
     return this._usersService.servicerList(res, page, filters);
   }
   @Get('userInbox')
@@ -221,5 +220,15 @@ export class UsersController {
       data.categ,
       data.date,
     );
+  }
+  @Patch('editProfile')
+  @UsePipes(new ValidationPipe({ transform: true }))
+  async editProfile(
+    @Req() req: Request,
+    @Res() res: Response,
+    @Body('name') name: string,
+    @Body('phone') phone: number,
+  ) {
+    return this._usersService.editProfile(req, res, name, phone);
   }
 }

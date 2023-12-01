@@ -31,7 +31,7 @@ export interface IServicerRepository {
   servicerFindId(id: string): Promise<Servicer>;
   loadDashboard(id: string): Promise<void>;
   categoriesList(): Promise<Category>;
-  bookingsList(): Promise<BookingDto>;
+  bookingsList(servicerId: string): Promise<BookingDto>;
   bookingApprovalStatus(id: string, status: string): Promise<void>;
   cancelBooking(bookingId: string, id: string, textArea: string): Promise<void>;
   findConnection(id: string): Promise<any>;
@@ -52,4 +52,11 @@ export interface IServicerRepository {
   additionalServices(servicerId: string): Promise<any>;
   listUnlist(id: string, list: boolean): Promise<void>;
   findAdditional(id: string): Promise<any>;
+  updateAdditionalServices(
+    id: string,
+    categoryName: string,
+    description: string,
+    amount: number,
+    image: (UploadApiResponse | UploadApiErrorResponse)[],
+  ): Promise<void>;
 }

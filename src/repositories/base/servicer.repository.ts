@@ -118,8 +118,13 @@ export class ServicerRepository implements IServicerRepository {
   async categoriesList(): Promise<Category> {
     return await this._categoryModel.find({});
   }
-  async bookingsList(): Promise<BookingDto> {
+  async bookingsList(servicerId): Promise<BookingDto> {
     return await this._bookingModel.aggregate([
+      {
+        $match: {
+          service: new mongoose.Types.ObjectId(servicerId),
+        },
+      },
       {
         $lookup: {
           from: 'servicers',
@@ -282,5 +287,26 @@ export class ServicerRepository implements IServicerRepository {
     return await this._additionalServices.findOne({
       _id: id,
     });
+  }
+  async updateAdditionalServices(
+    id: string,
+    categoryName: string,
+    description: string,
+    amount: number,
+    image: (UploadApiResponse | UploadApiErrorResponse)[],
+  ): Promise<void> {
+    await this._additionalServices.updateOne(
+      {
+        _id: id,
+      },
+      {
+        $set: {
+          categoryName: categoryName,
+          description: description,
+          amount: amount,
+          image: image[0].secure_url,
+        },
+      },
+    );
   }
 }

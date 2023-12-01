@@ -72,7 +72,6 @@ export class UserRepository implements IUserRepository {
   async servicerList(skip: number, limit: number, filters: any): Promise<any> {
     const filter: any = {};
     if (filters.category) filter.category = filters.category;
-    console.log(filter);
     const serviceList = await this._servicerModel.aggregate([
       {
         $lookup: {
@@ -102,7 +101,9 @@ export class UserRepository implements IUserRepository {
         $limit: limit,
       },
     ]);
-    const count = await this._servicerModel.countDocuments();
+    let count = await this._servicerModel.countDocuments();
+    if (filters.category) count = serviceList.length;
+
     const totalPage = Math.ceil(count / limit);
     return { totalPage, serviceList };
   }
@@ -373,5 +374,15 @@ export class UserRepository implements IUserRepository {
       },
     ]);
     return data;
+  }
+  async editProfile(
+    userId: string,
+    name: string,
+    phone: number,
+  ): Promise<void> {
+    await this._userModel.updateOne(
+      { _id: userId },
+      { $set: { name: name, phone: phone } },
+    );
   }
 }

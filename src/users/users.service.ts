@@ -287,6 +287,9 @@ export class UsersService {
         ? serviceAmount['amount'] - walletChecked
         : serviceAmount['amount'];
       if (walletChecked) {
+        if (walletChecked > serviceAmount['amount']) {
+          walletChecked = serviceAmount['amount'];
+        }
         await this._userRepository.userWalletChecked(userId, walletChecked);
       }
       const inserted = await this._userRepository.createBooking(
@@ -340,7 +343,9 @@ export class UsersService {
         userId,
         bookedAmt['total'],
       );
-      return res.status(HttpStatus.CREATED);
+      return res
+        .status(HttpStatus.CREATED)
+        .json({ message: 'Successfully Cancelled' });
     } catch (error) {
       if (error instanceof HttpException) {
         return res.status(error.getStatus()).json({
@@ -748,6 +753,28 @@ export class UsersService {
       return res
         .status(HttpStatus.NOT_FOUND)
         .json({ message: 'There is no Servicer on the specified filters' });
+    } catch (error) {
+      if (error instanceof HttpException) {
+        return res.status(error.getStatus()).json({
+          message: error.message,
+        });
+      } else {
+        return res.status(HttpStatus.INTERNAL_SERVER_ERROR).json({
+          message: 'Internal Server Error',
+        });
+      }
+    }
+  }
+  async editProfile(req: Request, res: Response, name: string, phone: number) {
+    try {
+      const authHeader = req.headers['authorization'];
+      const token = authHeader.split(' ')[1];
+      const decoded = await this._jwtService.verify(token);
+      const userId = decoded.token;
+      await this._userRepository.editProfile(userId, name, phone);
+      return res
+        .status(HttpStatus.CREATED)
+        .json({ message: 'Updated Successfully' });
     } catch (error) {
       if (error instanceof HttpException) {
         return res.status(error.getStatus()).json({

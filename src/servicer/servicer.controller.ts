@@ -91,8 +91,8 @@ export class ServicerController {
   }
   @Get('listBookings')
   @UsePipes(new ValidationPipe({ transform: true }))
-  async listBookings(@Res() res: Response) {
-    return this._servicerService.listBookings(res);
+  async listBookings(@Req() req: Request, @Res() res: Response) {
+    return this._servicerService.listBookings(req, res);
   }
   @Post('approveBooking')
   @UsePipes(new ValidationPipe({ transform: true }))
@@ -160,5 +160,15 @@ export class ServicerController {
   @UsePipes(new ValidationPipe({ transform: true }))
   async listUnlist(@Res() res: Response, @Body('id') id: string) {
     return this._servicerService.listUnlist(res, id);
+  }
+  @Patch('updateService')
+  @UsePipes(new ValidationPipe({ transform: true }))
+  @UseInterceptors(FileFieldsInterceptor([{ name: 'image', maxCount: 1 }]))
+  async updateService(
+    @Res() res: Response,
+    @Body() data: any,
+    @UploadedFiles() files: Array<Express.Multer.File>,
+  ) {
+    return this._servicerService.updateService(res, data, files);
   }
 }

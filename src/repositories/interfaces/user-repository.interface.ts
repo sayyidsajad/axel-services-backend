@@ -52,4 +52,5 @@ export interface IUserRepository {
   filterTimes(id: string, date: any): Promise<any>;
   categoriesList(): Promise<any>;
   findSearched(search?: string, categ?: string, date?: string): Promise<any>;
+  editProfile(userId: string, name: string, phone: number): Promise<void>;
 }

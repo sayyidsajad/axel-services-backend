@@ -339,9 +339,13 @@ export class ServicerService {
       }
     }
   }
-  async listBookings(res: Response) {
+  async listBookings(req: Request, res: Response) {
     try {
-      const listBookings = await this._servicerRepository.bookingsList();
+      const authHeader = req.headers['authorization'];
+      const token = authHeader.split(' ')[1];
+      const decoded = await this._jwtService.verify(token);
+      const servicerId = decoded.token;
+      const listBookings = await this._servicerRepository.bookingsList(servicerId);
       return res
         .status(HttpStatus.OK)
         .json({ message: 'Success', bookings: listBookings });
@@ -635,6 +639,34 @@ export class ServicerService {
       const servicerId = decoded.token;
       const details = await this._servicerRepository.servicerFindId(servicerId);
       return res.status(HttpStatus.ACCEPTED).json({ details });
+    } catch (error) {
+      if (error instanceof HttpException) {
+        return res.status(error.getStatus()).json({
+          message: error.message,
+        });
+      } else {
+        return res.status(HttpStatus.INTERNAL_SERVER_ERROR).json({
+          message: 'Internal Server Error',
+        });
+      }
+    }
+  }
+  async updateService(
+    res: Response,
+    data: any,
+    files: Array<Express.Multer.File>,
+  ) {
+    try {
+      const { id, categoryName, description, amount } = data;
+      const image = await this._cloudinary.uploadImage(files['image']);
+      await this._servicerRepository.updateAdditionalServices(
+        id,
+        categoryName,
+        description,
+        amount,
+        image,
+      );
+      return res.status(HttpStatus.CREATED).json({ message: 'Success' });
     } catch (error) {
       if (error instanceof HttpException) {
         return res.status(error.getStatus()).json({
