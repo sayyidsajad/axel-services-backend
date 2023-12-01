@@ -79,8 +79,9 @@ export class UsersController {
     @Req() req: Request,
     @Res() res: Response,
     @Body('id') id: string,
+    @Body('textArea') textArea: string,
   ) {
-    return this._usersService.cancel(req, res, id);
+    return this._usersService.cancel(req, res, id, textArea);
   }
   @Get('servicerList')
   @UsePipes(new ValidationPipe({ transform: true }))
@@ -244,5 +245,10 @@ export class UsersController {
       data.currentPassword,
       data.password,
     );
+  }
+  @Get('viewDetails')
+  @UsePipes(new ValidationPipe({ transform: true }))
+  async viewDetails(@Res() res: Response, @Query('id') id: string) {
+    return this._usersService.viewDetails(res, id);
   }
 }

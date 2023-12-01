@@ -23,9 +23,13 @@ export interface IUserRepository {
     reducedAmt: number,
   ): Promise<BookingDto>;
   listBookings(): Promise<BookingDto>;
-  cancelBooking(id: string): Promise<BookingDto>;
+  cancelBooking(id: string, textArea: string): Promise<BookingDto>;
   bookingFindId(id: string): Promise<BookingDto>;
-  cancelBookingUpdateOne(id: string, total: number): Promise<BookingDto>;
+  cancelBookingUpdateOne(
+    id: string,
+    total: number,
+    textArea: string,
+  ): Promise<BookingDto>;
   userInbox(id: string): Promise<User>;
   cancelAll(id: string): Promise<User>;
   paymentSuccess(id: string): Promise<void>;
@@ -54,4 +58,5 @@ export interface IUserRepository {
   findSearched(search?: string, categ?: string, date?: string): Promise<any>;
   editProfile(userId: string, name: string, phone: number): Promise<void>;
   updatePassword(id: string, password: string): Promise<void>;
+  viewDetails(id: string): Promise<any>;
 }

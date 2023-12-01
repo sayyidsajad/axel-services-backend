@@ -10,6 +10,7 @@ export const BookingSchema = new mongoose.Schema(
     approvalStatus: { type: String, default: 'Pending', required: true },
     paymentStatus: { type: String, required: true },
     total: { type: Number, required: true },
+    cancelReason: String,
   },
   { timestamps: true },
 );

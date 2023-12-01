@@ -331,13 +331,13 @@ export class UsersService {
       }
     }
   }
-  async cancel(req: Request, res: Response, id: string) {
+  async cancel(req: Request, res: Response, id: string, textArea: string) {
     try {
       const authHeader = req.headers['authorization'];
       const token = authHeader.split(' ')[1];
       const decoded = this._jwtService.verify(token);
       const userId = decoded.token;
-      await this._userRepository.cancelBooking(id);
+      await this._userRepository.cancelBooking(id, textArea);
       const bookedAmt = await this._userRepository.bookingFindId(id);
       await this._userRepository.cancelBookingUpdateOne(
         userId,
@@ -597,7 +597,7 @@ export class UsersService {
     try {
       const { servicerId, userId, message } = data;
       await this._userRepository.review(servicerId, userId, message);
-      return res.status(HttpStatus.ACCEPTED);
+      return res.status(HttpStatus.OK).json({ message: 'Success' });
     } catch (error) {
       if (error instanceof HttpException) {
         return res.status(error.getStatus()).json({
@@ -798,22 +798,49 @@ export class UsersService {
       const token = authHeader.split(' ')[1];
       const decoded = await this._jwtService.verify(token);
       const userId = decoded.token;
-      const checkPassword = this._userRepository.userFindId(userId);
-      const matchingPass = bcrypt.compare(
+      const checkPassword = await this._userRepository.userFindId(userId);
+      if (checkPassword['password'] === password) {
+        return res.status(HttpStatus.BAD_REQUEST).json({
+          message: 'Old password and current passwords should not match',
+        });
+      }
+      const matchingPass = await bcrypt.compare(
         currentPassword,
         checkPassword['password'],
       );
-      if (!matchingPass) {
+      const oldPass = await bcrypt.compare(password, checkPassword['password']);
+      if (oldPass) {
         return res
-          .status(HttpStatus.NON_AUTHORITATIVE_INFORMATION)
+          .status(HttpStatus.BAD_REQUEST)
+          .json({ message: "Password shouldn't match old password" });
+      } else if (!matchingPass) {
+        return res
+          .status(HttpStatus.BAD_REQUEST)
           .json({ message: "Current Password doesn't match" });
       } else {
-        const hashedPassword = await bcrypt.hash(password, 10);
+        const salt = await bcrypt.genSalt(10);
+        const hashedPassword = await bcrypt.hash(password, salt);
         await this._userRepository.updatePassword(userId, hashedPassword);
       }
       return res
         .status(HttpStatus.CREATED)
         .json({ message: 'Updated Successfully' });
+    } catch (error) {
+      if (error instanceof HttpException) {
+        return res.status(error.getStatus()).json({
+          message: error.message,
+        });
+      } else {
+        return res.status(HttpStatus.INTERNAL_SERVER_ERROR).json({
+          message: 'Internal Server Error',
+        });
+      }
+    }
+  }
+  async viewDetails(res: Response, id: string) {
+    try {
+      const bookingDetails = await this._userRepository.viewDetails(id);
+      return res.status(HttpStatus.OK).json({ bookingDetails });
     } catch (error) {
       if (error instanceof HttpException) {
         return res.status(error.getStatus()).json({

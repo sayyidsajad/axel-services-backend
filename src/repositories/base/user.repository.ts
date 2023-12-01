@@ -168,10 +168,10 @@ export class UserRepository implements IUserRepository {
       },
     ]);
   }
-  async cancelBooking(id: string): Promise<BookingDto> {
+  async cancelBooking(id: string, textArea: string): Promise<BookingDto> {
     return await this._bookingModel.updateOne(
       { _id: id },
-      { $set: { approvalStatus: 'Cancelled' } },
+      { $set: { approvalStatus: 'Cancelled', cancelReason: textArea } },
     );
   }
   async bookingFindId(id: string): Promise<BookingDto> {
@@ -387,5 +387,9 @@ export class UserRepository implements IUserRepository {
   }
   async updatePassword(id: string, password: string): Promise<void> {
     await this._userModel.updateOne({ _id: id }, { $set: { password } });
+  }
+
+  async viewDetails(id: string): Promise<any> {
+    return await this._bookingModel.findById({ _id: id }).populate('service');
   }
 }
