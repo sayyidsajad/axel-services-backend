@@ -70,8 +70,18 @@ export class UserRepository implements IUserRepository {
     );
   }
   async servicerList(skip: number, limit: number, filters: any): Promise<any> {
-    const filter: any = {};
-    if (filters.category) filter.category = filters.category;
+    const query: any = {};
+    if (filters.category) {
+      query.$match = { 'categoryInfo.categoryName': filters.category };
+    }
+    if (filters.company) {
+      if (query.$match) {
+        query.$match['serviceName'] = filters.company;
+      } else {
+        query.$match = { serviceName: filters.company };
+      }
+    }
+    const price = +filters.price;
     const serviceList = await this._servicerModel.aggregate([
       {
         $lookup: {
@@ -87,13 +97,12 @@ export class UserRepository implements IUserRepository {
           preserveNullAndEmptyArrays: true,
         },
       },
-      ...(filters.category
-        ? [
-            {
-              $match: { 'categoryInfo.categoryName': filter.category },
-            },
-          ]
-        : []),
+      ...(filters.category || filters.company ? [query] : []),
+      {
+        $sort: {
+          amount: price || 1,
+        },
+      },
       {
         $skip: skip,
       },
