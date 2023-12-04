@@ -9,10 +9,11 @@ import { CategoryAdminDto } from './dto/admin-category.dto';
 import * as dotenv from 'dotenv';
 import { AdminRepository } from 'src/repositories/base/admin.repository';
 import { CloudinaryService } from 'src/cloudinary/cloudinary.service';
+import { IAdminService } from 'src/repositories/impl/admin.service.impl';
 dotenv.config();
 
 @Injectable()
-export class AdminService {
+export class AdminService implements IAdminService {
   constructor(
     private _configService: ConfigService,
     private _jwtService: JwtService,

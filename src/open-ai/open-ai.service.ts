@@ -1,9 +1,10 @@
 import { HttpException, HttpStatus, Injectable } from '@nestjs/common';
 import { Response } from 'express';
 import OpenAI from 'openai';
+import { IOpenAiService } from 'src/repositories/impl/open-ai.service.impl';
 
 @Injectable()
-export class OpenAiService {
+export class OpenAiService implements IOpenAiService {
   private readonly openai: OpenAI;
   constructor() {
     this.openai = new OpenAI({

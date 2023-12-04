@@ -26,7 +26,7 @@ import { HttpExceptionFilter } from 'src/exceptions/http-exception.filter';
 @Controller('servicer')
 @UseFilters(new HttpExceptionFilter())
 export class ServicerController {
-  constructor(private readonly _servicerService: ServicerService) {}
+  constructor(private _servicerService: ServicerService) {}
   @Post('signup')
   @UsePipes(new ValidationPipe({ transform: true }))
   async servicerRegister(
@@ -101,7 +101,7 @@ export class ServicerController {
   }
   @Post('cancelBooking')
   @UsePipes(new ValidationPipe({ transform: true }))
-  async scancelBooking(
+  async cancelBooking(
     @Res() res: Response,
     @Body('textArea') textArea: string,
     @Body('bookingId') bookingId: string,

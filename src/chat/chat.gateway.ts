@@ -19,7 +19,7 @@ dotenv.config();
 export class ChatGateway {
   @WebSocketServer()
   server: Server;
-  constructor(private readonly _chatService: ChatService) {}
+  constructor(private _chatService: ChatService) {}
   @SubscribeMessage('connection')
   async handleConnection(client: Socket) {
     if (!client) {

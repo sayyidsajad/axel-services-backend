@@ -16,10 +16,11 @@ import { TwilioService } from 'nestjs-twilio';
 import { UserRepository } from 'src/repositories/base/user.repository';
 import { CloudinaryService } from 'src/cloudinary/cloudinary.service';
 import * as moment from 'moment';
+import { IUserService } from 'src/repositories/impl/user.service.impl';
 dotenv.config();
 
 @Injectable()
-export class UsersService {
+export class UsersService implements IUserService {
   constructor(
     private _configService: ConfigService,
     private _jwtService: JwtService,
@@ -30,7 +31,7 @@ export class UsersService {
   ) {}
   async userRegister(
     createUserDto: CreateUserDto,
-    res: Response,
+    res: Response<User>,
   ): Promise<User> {
     try {
       const { email, phone } = createUserDto;
@@ -163,7 +164,7 @@ export class UsersService {
       }
     }
   }
-  async sendMail(res: Response, id: string) {
+  async sendMail(id: string, res: Response) {
     try {
       const findId = await this._userRepository.userFindId(id);
       const otp = await otpGenerator.generate(4, {
@@ -221,7 +222,7 @@ export class UsersService {
       }
     }
   }
-  async loadHome(res: Response, id: string) {
+  async loadHome(id: string, res: Response) {
     try {
       await this._userRepository.userEmailUpdateOne(id);
       return res.status(HttpStatus.CREATED).json({ message: 'Success' });

@@ -13,10 +13,11 @@ import { CloudinaryService } from 'src/cloudinary/cloudinary.service';
 import * as dotenv from 'dotenv';
 import { ConfigService } from '@nestjs/config';
 import { ServicerRepository } from 'src/repositories/base/servicer.repository';
+import { IServicerService } from 'src/repositories/impl/servicer.service.impl';
 dotenv.config();
 
 @Injectable()
-export class ServicerService {
+export class ServicerService implements IServicerService {
   constructor(
     private _jwtService: JwtService,
     private _servicerRepository: ServicerRepository,

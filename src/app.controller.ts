@@ -1,11 +1,11 @@
 import { Controller, Get, UseFilters } from '@nestjs/common';
-import { AppService } from './app.service';
 import { HttpExceptionFilter } from './exceptions/http-exception.filter';
+import { AppService } from './app.service';
 
 @Controller()
 @UseFilters(new HttpExceptionFilter())
 export class AppController {
-  constructor(private readonly _appService: AppService) {}
+  constructor(private _appService: AppService) {}
 
   @Get()
   getHello(): string {

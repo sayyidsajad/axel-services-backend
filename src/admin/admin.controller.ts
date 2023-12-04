@@ -11,17 +11,17 @@ import {
   UseFilters,
   UploadedFiles,
 } from '@nestjs/common';
-import { AdminService } from './admin.service';
 import { CreateAdminDto, CreateBanner } from './dto/create-admin.dto';
 import { Response } from 'express';
 import { CategoryAdminDto } from './dto/admin-category.dto';
 import { HttpExceptionFilter } from 'src/exceptions/http-exception.filter';
 import { FileFieldsInterceptor } from '@nestjs/platform-express';
+import { AdminService } from './admin.service';
 
 @Controller('admin')
 @UseFilters(new HttpExceptionFilter())
 export class AdminController {
-  constructor(private readonly _adminService: AdminService) {}
+  constructor(private _adminService: AdminService) {}
   @Post()
   @UsePipes(new ValidationPipe({ transform: true }))
   async adminLogin(

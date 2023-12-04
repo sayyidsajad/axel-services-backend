@@ -13,7 +13,6 @@ import {
   UseFilters,
   UploadedFiles,
 } from '@nestjs/common';
-import { UsersService } from './users.service';
 import {
   CreateUserDto,
   SocialUser,
@@ -23,38 +22,40 @@ import { PaymentVerificationDto } from './dto/verify-payment.dto';
 import { Response } from 'express';
 import { HttpExceptionFilter } from 'src/exceptions/http-exception.filter';
 import { FileFieldsInterceptor } from '@nestjs/platform-express';
+import { User } from './entities/user.entity';
+import { UsersService } from './users.service';
 
 @Controller()
 @UseFilters(new HttpExceptionFilter())
 export class UsersController {
-  constructor(private readonly _usersService: UsersService) {}
+  constructor(private _userServices: UsersService) {}
   @Post('signup')
   @UsePipes(new ValidationPipe({ transform: true }))
   async userRegister(
-    @Body() createUserDto: CreateUserDto,
-    @Res() res: Response,
-  ) {
-    return this._usersService.userRegister(createUserDto, res);
+    createUserDto: CreateUserDto,
+    @Res() res: Response<User>,
+  ): Promise<User> {
+    return this._userServices.userRegister(createUserDto, res);
   }
   @Post()
   @UsePipes(new ValidationPipe({ transform: true }))
   async userLogin(@Body() user: loggedUserDto, @Res() res: Response) {
-    return this._usersService.userLogin(user, res);
+    return this._userServices.userLogin(user, res);
   }
   @Post('googleLogin')
   @UsePipes(new ValidationPipe({ transform: true }))
   async googleLogin(@Body() socialUser: SocialUser, @Res() res: Response) {
-    return this._usersService.googleLogin(socialUser, res);
+    return this._userServices.googleLogin(socialUser, res);
   }
   @Get('otpVerification')
   @UsePipes(new ValidationPipe({ transform: true }))
   async sendMail(@Query('id') id: string, @Res() res: Response) {
-    return this._usersService.sendMail(res, id);
+    return this._userServices.sendMail(id, res);
   }
   @Patch('home')
   @UsePipes(new ValidationPipe({ transform: true }))
-  async loadHome(@Res() res: Response, @Body('id') id: string) {
-    return this._usersService.loadHome(res, id);
+  async loadHome(@Body('id') id: string, @Res() res: Response) {
+    return this._userServices.loadHome(id, res);
   }
   @Post('bookNow')
   @UsePipes(new ValidationPipe({ transform: true }))
@@ -66,12 +67,12 @@ export class UsersController {
     @Body('time') time: string,
     @Body('walletChecked') walletChecked: number,
   ) {
-    return this._usersService.bookNow(req, res, id, date, time, walletChecked);
+    return this._userServices.bookNow(req, res, id, date, time, walletChecked);
   }
   @Get('bookingsList')
   @UsePipes(new ValidationPipe({ transform: true }))
   async bookingsList(@Res() res: Response) {
-    return this._usersService.bookingsList(res);
+    return this._userServices.bookingsList(res);
   }
   @Patch('cancelBooked')
   @UsePipes(new ValidationPipe({ transform: true }))
@@ -81,7 +82,7 @@ export class UsersController {
     @Body('id') id: string,
     @Body('textArea') textArea: string,
   ) {
-    return this._usersService.cancel(req, res, id, textArea);
+    return this._userServices.cancel(req, res, id, textArea);
   }
   @Get('servicerList')
   @UsePipes(new ValidationPipe({ transform: true }))
@@ -90,22 +91,22 @@ export class UsersController {
     @Query('page') page?: number,
     @Query() filters?: any,
   ) {
-    return this._usersService.servicerList(res, page, filters);
+    return this._userServices.servicerList(res, page, filters);
   }
   @Get('userInbox')
   @UsePipes(new ValidationPipe({ transform: true }))
   async userInbox(@Res() res: Response, @Req() req: Request) {
-    return this._usersService.userInbox(res, req);
+    return this._userServices.userInbox(res, req);
   }
   @Get('clearAll')
   @UsePipes(new ValidationPipe({ transform: true }))
   async cancelAll(@Res() res: Response, @Req() req: Request) {
-    return this._usersService.cancelAll(res, req);
+    return this._userServices.cancelAll(res, req);
   }
   @Get('userProfile')
   @UsePipes(new ValidationPipe({ transform: true }))
   async userProfile(@Res() res: Response, @Req() req: Request) {
-    return this._usersService.userProfile(res, req);
+    return this._userServices.userProfile(res, req);
   }
   @Post('verifyPayment')
   @UsePipes(new ValidationPipe({ transform: true }))
@@ -113,7 +114,7 @@ export class UsersController {
     @Res() res: Response,
     @Body() data: PaymentVerificationDto,
   ) {
-    return this._usersService.verifyPayment(res, data);
+    return this._userServices.verifyPayment(res, data);
   }
   @Get('servicerDetails')
   @UsePipes(new ValidationPipe({ transform: true }))
@@ -122,12 +123,12 @@ export class UsersController {
     @Res() res: Response,
     @Query('id') id: string,
   ) {
-    return this._usersService.servicerDetails(req, res, id);
+    return this._userServices.servicerDetails(req, res, id);
   }
   @Post('forgotPassword')
   @UsePipes(new ValidationPipe({ transform: true }))
   async forgotPassword(@Res() res: Response, @Body('email') email: string) {
-    return this._usersService.forgotPassword(res, email);
+    return this._userServices.forgotPassword(res, email);
   }
   @Post('verifyConfirmPassword')
   @UsePipes(new ValidationPipe({ transform: true }))
@@ -137,7 +138,7 @@ export class UsersController {
     @Body('newConfirmPassword') newConfirmPassword: string,
     @Query('id') id: string,
   ) {
-    return this._usersService.verifyConfirmPassword(
+    return this._userServices.verifyConfirmPassword(
       res,
       id,
       newPassword,
@@ -151,32 +152,32 @@ export class UsersController {
     @Res() res: Response,
     @Req() req: Request,
   ) {
-    return this._usersService.getRecentChats(id, res, req);
+    return this._userServices.getRecentChats(id, res, req);
   }
   @Post('userEnquiry')
   @UsePipes(new ValidationPipe({ transform: true }))
   async userEnquiry(@Res() res: Response, @Body() data: any) {
-    return this._usersService.userEnquiry(res, data);
+    return this._userServices.userEnquiry(res, data);
   }
   @Post('review')
   @UsePipes(new ValidationPipe({ transform: true }))
   async review(@Res() res: Response, @Body() data: any) {
-    return this._usersService.review(res, data);
+    return this._userServices.review(res, data);
   }
   @Get('reviewsList')
   @UsePipes(new ValidationPipe({ transform: true }))
   async reviewsList(@Query('id') id: string, @Res() res: Response) {
-    return this._usersService.reviewsList(id, res);
+    return this._userServices.reviewsList(id, res);
   }
   @Get('listBanners')
   @UsePipes(new ValidationPipe({ transform: true }))
   async listBanners(@Res() res: Response) {
-    return this._usersService.listBanners(res);
+    return this._userServices.listBanners(res);
   }
   @Get('additionalList')
   @UsePipes(new ValidationPipe({ transform: true }))
   async additionalServices(@Res() res: Response, @Query('id') id: string) {
-    return this._usersService.additionalLists(res, id);
+    return this._userServices.additionalLists(res, id);
   }
   @Patch('profilePicture')
   @UsePipes(new ValidationPipe({ transform: true }))
@@ -186,7 +187,7 @@ export class UsersController {
     @Res() res: Response,
     @UploadedFiles() files: Array<Express.Multer.File>,
   ) {
-    return this._usersService.profilePicture(req, res, files);
+    return this._userServices.profilePicture(req, res, files);
   }
   @Get('filterDates')
   @UsePipes(new ValidationPipe({ transform: true }))
@@ -195,7 +196,7 @@ export class UsersController {
     @Res() res: Response,
     @Query('id') id: string,
   ) {
-    return this._usersService.filterDates(req, res, id);
+    return this._userServices.filterDates(req, res, id);
   }
   @Post('filterTimes')
   @UsePipes(new ValidationPipe({ transform: true }))
@@ -205,17 +206,17 @@ export class UsersController {
     @Body('id') id: string,
     @Body('date') date: string,
   ) {
-    return this._usersService.filterTimes(req, res, id, date);
+    return this._userServices.filterTimes(req, res, id, date);
   }
   @Get('categoriesList')
   @UsePipes(new ValidationPipe({ transform: true }))
   async categoriesList(@Res() res: Response) {
-    return this._usersService.categoriesList(res);
+    return this._userServices.categoriesList(res);
   }
   @Post('findSearched')
   @UsePipes(new ValidationPipe({ transform: true }))
   async findSearched(@Res() res: Response, @Body() data: any) {
-    return this._usersService.findSearched(
+    return this._userServices.findSearched(
       res,
       data.place,
       data.categ,
@@ -230,7 +231,7 @@ export class UsersController {
     @Body('name') name: string,
     @Body('phone') phone: number,
   ) {
-    return this._usersService.editProfile(req, res, name, phone);
+    return this._userServices.editProfile(req, res, name, phone);
   }
   @Patch('updatePassword')
   @UsePipes(new ValidationPipe({ transform: true }))
@@ -239,7 +240,7 @@ export class UsersController {
     @Res() res: Response,
     @Body() data: any,
   ) {
-    return this._usersService.updatePassword(
+    return this._userServices.updatePassword(
       req,
       res,
       data.currentPassword,
@@ -249,6 +250,6 @@ export class UsersController {
   @Get('viewDetails')
   @UsePipes(new ValidationPipe({ transform: true }))
   async viewDetails(@Res() res: Response, @Query('id') id: string) {
-    return this._usersService.viewDetails(res, id);
+    return this._userServices.viewDetails(res, id);
   }
 }
