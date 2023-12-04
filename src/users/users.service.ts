@@ -82,6 +82,8 @@ export class UsersService implements IUserService {
         throw new HttpException('Token not available', HttpStatus.UNAUTHORIZED);
       }
     } catch (error) {
+      console.log(error);
+
       if (error instanceof HttpException) {
         return res.status(error.getStatus()).json({
           message: error.message,
@@ -671,7 +673,7 @@ export class UsersService implements IUserService {
       const decoded = await this._jwtService.verify(token);
       const userId = decoded.token;
       await this._userRepository.profilePicture(userId, image);
-      return res.status(HttpStatus.ACCEPTED).json({ message: 'Success' });
+      return res.status(HttpStatus.OK).json({ message: 'Success' });
     } catch (error) {
       if (error instanceof HttpException) {
         return res.status(error.getStatus()).json({
