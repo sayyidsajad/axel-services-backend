@@ -177,7 +177,7 @@ export class AdminService implements IAdminService {
     try {
       const { categoryName, description } = category;
       await this._adminRepository.createCategory(categoryName, description);
-      return res.status(HttpStatus.CREATED);
+      return res.status(HttpStatus.CREATED).json({ message: 'Success' });
     } catch (error) {
       if (error instanceof HttpException) {
         return res.status(error.getStatus()).json({

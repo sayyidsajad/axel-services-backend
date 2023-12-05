@@ -32,8 +32,8 @@ export class UsersController {
   @Post('signup')
   @UsePipes(new ValidationPipe({ transform: true }))
   async userRegister(
-    createUserDto: CreateUserDto,
-    @Res() res: Response<User>,
+    @Body() createUserDto: CreateUserDto,
+    @Res() res: Response,
   ): Promise<User> {
     return this._userServices.userRegister(createUserDto, res);
   }

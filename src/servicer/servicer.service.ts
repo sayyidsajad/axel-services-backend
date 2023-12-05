@@ -640,7 +640,7 @@ export class ServicerService implements IServicerService {
       const decoded = await this._jwtService.verify(token);
       const servicerId = decoded.token;
       const details = await this._servicerRepository.servicerFindId(servicerId);
-      return res.status(HttpStatus.ACCEPTED).json({ details });
+      return res.status(HttpStatus.OK).json({ details });
     } catch (error) {
       if (error instanceof HttpException) {
         return res.status(error.getStatus()).json({

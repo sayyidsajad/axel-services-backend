@@ -31,7 +31,7 @@ export class UsersService implements IUserService {
   ) {}
   async userRegister(
     createUserDto: CreateUserDto,
-    res: Response<User>,
+    res: Response,
   ): Promise<User> {
     try {
       const { email, phone } = createUserDto;
