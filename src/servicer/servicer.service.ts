@@ -681,4 +681,19 @@ export class ServicerService implements IServicerService {
       }
     }
   }
+  async servicerCaptcha(res: Response) {
+    try {
+      return res.status(HttpStatus.OK).json({ message: 'Success' });
+    } catch (error) {
+      if (error instanceof HttpException) {
+        return res.status(error.getStatus()).json({
+          message: error.message,
+        });
+      } else {
+        return res.status(HttpStatus.INTERNAL_SERVER_ERROR).json({
+          message: 'Internal Server Error',
+        });
+      }
+    }
+  }
 }

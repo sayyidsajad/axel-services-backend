@@ -48,4 +48,5 @@ export interface IServicerService {
     data: any,
     files: Array<Express.Multer.File>,
   ): Promise<any>;
+  servicerCaptcha(res: Response): Promise<any>;
 }

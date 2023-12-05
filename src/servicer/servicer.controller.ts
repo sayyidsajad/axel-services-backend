@@ -7,6 +7,7 @@ import {
   UseInterceptors,
   Query,
   ValidationPipe,
+  UseGuards,
   UsePipes,
   Req,
   UseFilters,
@@ -22,6 +23,7 @@ import {
 import { Response } from 'express';
 import { FileFieldsInterceptor } from '@nestjs/platform-express';
 import { HttpExceptionFilter } from 'src/exceptions/http-exception.filter';
+import { RecaptchaGuard } from 'src/guards/recaptcha.guard';
 
 @Controller('servicer')
 @UseFilters(new HttpExceptionFilter())
@@ -68,6 +70,12 @@ export class ServicerController {
   @UsePipes(new ValidationPipe({ transform: true }))
   async servicerDetails(@Res() res: Response, @Query('id') id: string) {
     return this._servicerService.servicerDetails(res, id);
+  }
+  @Get('recaptcha')
+  @UseGuards(RecaptchaGuard)
+  @UsePipes(new ValidationPipe({ transform: true }))
+  async servicerCaptcha(@Res() res: Response) {
+    return this._servicerService.servicerCaptcha(res);
   }
   @Get('servicersApproval')
   @UsePipes(new ValidationPipe({ transform: true }))
