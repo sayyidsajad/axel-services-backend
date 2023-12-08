@@ -247,6 +247,15 @@ export class UsersController {
       data.password,
     );
   }
+  @Patch('clearOne')
+  @UsePipes(new ValidationPipe({ transform: true }))
+  async clearOne(
+    @Req() req: Request,
+    @Res() res: Response,
+    @Body('inboxId') inboxId: string,
+  ) {
+    return this._userServices.clearOne(res, req, inboxId);
+  }
   @Get('viewDetails')
   @UsePipes(new ValidationPipe({ transform: true }))
   async viewDetails(@Res() res: Response, @Query('id') id: string) {

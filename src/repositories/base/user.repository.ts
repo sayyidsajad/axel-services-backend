@@ -9,6 +9,7 @@ import { Servicer } from 'src/servicer/entities/servicer.entity';
 import { BookingDto } from 'src/admin/dto/booking.dto';
 import { IBanner } from './types/admin/admin-types';
 import { UploadApiResponse, UploadApiErrorResponse } from 'cloudinary';
+import * as moment from 'moment-timezone';
 
 export class UserRepository implements IUserRepository {
   constructor(
@@ -330,13 +331,15 @@ export class UserRepository implements IUserRepository {
     return dates;
   }
   async filterTimes(id: string, date: any): Promise<any> {
+    const selectedDate = new Date(date);
+    const inputDate = moment(selectedDate);
+    const formattedDate =
+      inputDate.format('ddd MMM DD YYYY HH:mm:ss [GMT]Z') +
+      ' (India Standard Time)';
     const filteredBookings = await this._bookingModel
       .find({
         service: id,
-        date: {
-          $gte: date.toISOString(),
-          $lt: new Date(date.getTime() + 24 * 60 * 60 * 1000).toISOString(),
-        },
+        date: formattedDate,
       })
       .select('time')
       .populate('service');
@@ -400,5 +403,13 @@ export class UserRepository implements IUserRepository {
 
   async viewDetails(id: string): Promise<any> {
     return await this._bookingModel.findById({ _id: id }).populate('service');
+  }
+  async clearOne(userId: string, inboxId: string): Promise<any> {
+    const result = await this._userModel.updateOne(
+      { _id: userId },
+      { $pull: { inbox: { _id: new mongoose.Types.ObjectId(inboxId) } } },
+    );
+
+    console.log('Updated User:', result);
   }
 }

@@ -59,4 +59,5 @@ export interface IUserRepository {
   editProfile(userId: string, name: string, phone: number): Promise<void>;
   updatePassword(id: string, password: string): Promise<void>;
   viewDetails(id: string): Promise<any>;
+  clearOne(userId: string, bookingId: string): Promise<any>;
 }

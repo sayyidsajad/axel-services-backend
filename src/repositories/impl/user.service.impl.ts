@@ -79,4 +79,5 @@ export interface IUserService {
     password: string,
   ): Promise<any>;
   viewDetails(res: Response, id: string): Promise<any>;
+  clearOne(res: Response, req: Request, bookingId: string): Promise<any>;
 }

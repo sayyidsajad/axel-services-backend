@@ -394,7 +394,27 @@ export class UsersService implements IUserService {
       const decoded = this._jwtService.verify(token);
       const userId = decoded.token;
       await this._userRepository.cancelAll(userId);
-      return res.status(HttpStatus.CREATED);
+      return res.status(HttpStatus.OK).json({ message: 'Success' });
+    } catch (error) {
+      if (error instanceof HttpException) {
+        return res.status(error.getStatus()).json({
+          message: error.message,
+        });
+      } else {
+        return res.status(HttpStatus.INTERNAL_SERVER_ERROR).json({
+          message: 'Internal Server Error',
+        });
+      }
+    }
+  }
+  async clearOne(res: Response, req: Request, inboxId: string) {
+    try {
+      const authHeader = req.headers['authorization'];
+      const token = authHeader.split(' ')[1];
+      const decoded = this._jwtService.verify(token);
+      const userId = decoded.token;
+      await this._userRepository.clearOne(userId, inboxId);
+      return res.status(HttpStatus.OK).json({ message: 'Success' });
     } catch (error) {
       if (error instanceof HttpException) {
         return res.status(error.getStatus()).json({
@@ -583,7 +603,7 @@ export class UsersService implements IUserService {
         email,
         message,
       );
-      return res.status(HttpStatus.ACCEPTED);
+      return res.status(HttpStatus.OK).json({ message: 'Success' });
     } catch (error) {
       if (error instanceof HttpException) {
         return res.status(error.getStatus()).json({

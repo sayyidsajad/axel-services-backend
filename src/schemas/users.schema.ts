@@ -10,11 +10,12 @@ export const UserSchema = new mongoose.Schema(
     isVerified: { type: Boolean, default: false, required: true },
     googleAuth: { type: Boolean, default: false, required: true },
     image: String,
-    inbox: {
-      type: Array,
-      cancelReason: { type: String },
-      bookingId: { types: mongoose.Schema.ObjectId, ref: 'Booking' },
-    },
+    inbox: [
+      {
+        cancelReason: { type: String },
+        bookingId: { type: mongoose.Schema.ObjectId, ref: 'Booking' },
+      },
+    ],
     wallet: {
       type: Number,
       default: 0,

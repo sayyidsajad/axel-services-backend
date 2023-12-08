@@ -437,7 +437,7 @@ export class ServicerService implements IServicerService {
         ...new Set(userSenderTypes.map((obj) => JSON.stringify(obj))),
       ].map((str) => JSON.parse(str as string));
       return res.status(HttpStatus.OK).json({
-        message: 'Sucess',
+        message: 'Success',
         uniqueUserSenderTypes,
         servicerId,
       });
