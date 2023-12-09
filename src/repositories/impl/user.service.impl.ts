@@ -19,6 +19,7 @@ export interface IUserService {
     id: string,
     date: string,
     time: string,
+    place: string,
     walletChewalletChecked: number,
   ): Promise<any>;
   bookingsList(res: Response): Promise<any>;

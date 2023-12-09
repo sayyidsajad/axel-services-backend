@@ -269,6 +269,7 @@ export class UsersService implements IUserService {
     id: string,
     date: string,
     time: string,
+    place: string,
     walletChecked?: number,
   ) {
     try {
@@ -298,6 +299,7 @@ export class UsersService implements IUserService {
       const inserted = await this._userRepository.createBooking(
         formattedDate,
         time,
+        place,
         `BK${lastValue ? ++lastValue : 1}`,
         userId,
         id,

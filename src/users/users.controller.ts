@@ -65,9 +65,18 @@ export class UsersController {
     @Body('id') id: string,
     @Body('date') date: string,
     @Body('time') time: string,
+    @Body('place') place: string,
     @Body('walletChecked') walletChecked: number,
   ) {
-    return this._userServices.bookNow(req, res, id, date, time, walletChecked);
+    return this._userServices.bookNow(
+      req,
+      res,
+      id,
+      date,
+      time,
+      place,
+      walletChecked,
+    );
   }
   @Get('bookingsList')
   @UsePipes(new ValidationPipe({ transform: true }))

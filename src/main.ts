@@ -26,7 +26,7 @@ async function bootstrap() {
   const configService = app.get(ConfigService);
   app.useStaticAssets(path.join(__dirname, '../upload'));
   const port = configService.get('PORT');
-  const clientHost = configService.get('CLIENT_S3');
+  const clientHost = configService.get('CLIENT_HOST');
   app.use(express.json({ limit: '50mb' }));
   app.use(express.urlencoded({ limit: '50mb', extended: true }));
   app.use(

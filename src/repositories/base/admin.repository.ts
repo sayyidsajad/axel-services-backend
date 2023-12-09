@@ -85,8 +85,14 @@ export class AdminRepository implements IAdminRepository {
   async categoryFind(id: string): Promise<Category> {
     return await this._categoryModel.find({ _id: id });
   }
+  async bannerFind(id: string): Promise<Category> {
+    return await this._bannerModel.find({ _id: id });
+  }
   async categoryListUpdate(id: string, list: boolean): Promise<void> {
     await this._categoryModel.updateOne({ _id: id }, { $set: { list: list } });
+  }
+  async bannerListUnlist(id: string, list: boolean): Promise<void> {
+    await this._bannerModel.updateOne({ _id: id }, { $set: { list: list } });
   }
   async cancelBooking(bookingId: string): Promise<void> {
     await this._bookingModel.updateOne(

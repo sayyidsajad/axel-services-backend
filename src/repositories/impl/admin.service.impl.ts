@@ -11,6 +11,7 @@ export interface IAdminService {
   listCategory(res: Response): Promise<any>;
   listBookings(res: Response): Promise<any>;
   listUnlist(res: Response, id: string): Promise<any>;
+  bannerListUnlist(res: Response, id: string): Promise<any>;
   servicersApproval(res: Response): Promise<any>;
   cancelBooking(
     res: Response,

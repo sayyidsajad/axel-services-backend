@@ -244,6 +244,28 @@ export class AdminService implements IAdminService {
       }
     }
   }
+  async bannerListUnlist(res: Response, id: string) {
+    try {
+      const listCheck = await this._adminRepository.bannerFind(id);
+      if (listCheck[0]['list'] === true) {
+        await this._adminRepository.bannerListUnlist(id, false);
+        return res.status(HttpStatus.ACCEPTED).json({ message: 'Unlisted' });
+      } else {
+        await this._adminRepository.bannerListUnlist(id, true);
+      }
+      return res.status(HttpStatus.ACCEPTED).json({ message: 'Listed' });
+    } catch (error) {
+      if (error instanceof HttpException) {
+        return res.status(error.getStatus()).json({
+          message: error.message,
+        });
+      } else {
+        return res.status(HttpStatus.INTERNAL_SERVER_ERROR).json({
+          message: 'Internal Server Error',
+        });
+      }
+    }
+  }
   async cancelBooking(
     res: Response,
     textArea: string,

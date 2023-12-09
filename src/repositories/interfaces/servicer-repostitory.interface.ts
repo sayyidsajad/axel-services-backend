@@ -32,6 +32,7 @@ export interface IServicerRepository {
   loadDashboard(id: string): Promise<void>;
   categoriesList(): Promise<Category>;
   bookingsList(servicerId: string): Promise<BookingDto>;
+  listReviews(servicerId: string): Promise<any>;
   bookingApprovalStatus(id: string, status: string): Promise<void>;
   cancelBooking(bookingId: string, id: string, textArea: string): Promise<void>;
   findConnection(id: string): Promise<any>;

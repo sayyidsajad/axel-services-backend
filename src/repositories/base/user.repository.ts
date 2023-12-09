@@ -144,6 +144,7 @@ export class UserRepository implements IUserRepository {
   async createBooking(
     updatedDate: string,
     time: string,
+    place: string,
     lastValue: string,
     userId: string,
     id: string,
@@ -152,6 +153,7 @@ export class UserRepository implements IUserRepository {
     const insertBooking = new this._bookingModel({
       date: updatedDate,
       time: time,
+      location: place,
       bookingId: lastValue,
       user: userId,
       service: id,

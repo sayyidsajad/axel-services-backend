@@ -4,6 +4,7 @@ export const BookingSchema = new mongoose.Schema(
   {
     date: { type: String, required: true },
     time: { type: String, required: true },
+    location: { type: String, required: true },
     bookingId: { type: String, required: true },
     user: { type: mongoose.Schema.ObjectId, ref: 'User' },
     service: { type: mongoose.Schema.ObjectId, ref: 'Servicer' },

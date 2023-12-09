@@ -20,28 +20,6 @@ export const UserSchema = new mongoose.Schema(
       type: Number,
       default: 0,
     },
-    address: [
-      {
-        name: {
-          type: String,
-        },
-        housename: {
-          type: String,
-        },
-        city: {
-          type: String,
-        },
-        state: {
-          type: String,
-        },
-        phone: {
-          type: Number,
-        },
-        pincode: {
-          type: Number,
-        },
-      },
-    ],
     walletHistory: [
       {
         date: {

@@ -17,6 +17,7 @@ export interface IUserRepository {
   createBooking(
     updatedDate: string,
     time: string,
+    place: string,
     lastValue: string,
     userId: string,
     id: string,

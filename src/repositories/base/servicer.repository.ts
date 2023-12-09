@@ -21,6 +21,8 @@ export class ServicerRepository implements IServicerRepository {
     private _messagingModel: Model<any>,
     @Inject('ADDITIONAL_SERVICES_MODEL')
     private _additionalServices: Model<any>,
+    @Inject('REVIEW_MODEL')
+    private _reviewModel: Model<any>,
   ) {}
   async servicerDashboard(): Promise<Servicer> {
     return await this._servicerModel.aggregate([
@@ -139,6 +141,11 @@ export class ServicerRepository implements IServicerRepository {
         },
       },
     ]);
+  }
+  async listReviews(servicerId: string): Promise<any> {
+    return await this._reviewModel
+      .find({ servicer: servicerId })
+      .populate('user');
   }
   async bookingApprovalStatus(id: string, status: string): Promise<void> {
     await this._bookingModel.updateOne(

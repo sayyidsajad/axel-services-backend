@@ -70,6 +70,11 @@ export class AdminController {
   async listUnlist(@Res() res: Response, @Body('id') id: string) {
     return this._adminService.listUnlist(res, id);
   }
+  @Patch('bannerListUnlist')
+  @UsePipes(new ValidationPipe({ transform: true }))
+  async bannerListUnlist(@Res() res: Response, @Body('id') id: string) {
+    return this._adminService.bannerListUnlist(res, id);
+  }
   @Get('servicersApproval')
   @UsePipes(new ValidationPipe({ transform: true }))
   async servicersApproval(@Res() res: Response) {

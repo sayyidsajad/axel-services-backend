@@ -23,6 +23,7 @@ export interface IServicerService {
   loadDashboard(res: Response, id: string): Promise<any>;
   categoriesList(res: Response): Promise<any>;
   listBookings(req: Request, res: Response): Promise<any>;
+  listReviews(req: Request, res: Response): Promise<any>;
   approveBooking(res: Response, id: string): Promise<any>;
   cancelBooking(
     res: Response,

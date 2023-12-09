@@ -363,6 +363,26 @@ export class ServicerService implements IServicerService {
       }
     }
   }
+  async listReviews(req: Request, res: Response) {
+    try {
+      const authHeader = req.headers['authorization'];
+      const token = authHeader.split(' ')[1];
+      const decoded = await this._jwtService.verify(token);
+      const servicerId = decoded.token;
+      const reviews = await this._servicerRepository.listReviews(servicerId);
+      return res.status(HttpStatus.OK).json({ message: 'Success', reviews });
+    } catch (error) {
+      if (error instanceof HttpException) {
+        return res.status(error.getStatus()).json({
+          message: error.message,
+        });
+      } else {
+        return res.status(HttpStatus.INTERNAL_SERVER_ERROR).json({
+          message: 'Internal Server Error',
+        });
+      }
+    }
+  }
   async approveBooking(res: Response, id: string) {
     try {
       const booked = await this._servicerRepository.bookingFindId(id);

@@ -17,7 +17,9 @@ export interface IAdminRepository {
   categoryFindAll(): Promise<Category>;
   bookingFindAll(): Promise<BookingDto>;
   categoryFind(id: string): Promise<Category>;
+  bannerFind(id: string): Promise<Category>;
   categoryListUpdate(id: string, list: boolean): Promise<void>;
+  bannerListUnlist(id: string, list: boolean): Promise<void>;
   cancelBooking(id: string): Promise<void>;
   cancelReasonUpdate(
     id: string,
