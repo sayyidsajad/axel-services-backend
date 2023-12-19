@@ -74,5 +74,15 @@ Nest is an MIT-licensed open source project. It can grow thanks to the sponsors 
 Nest is [MIT licensed](LICENSE).
 =======
 # axel-services-backend
-Axel Services Backend
+Axel Services Backend  
+Welcome to Axel Services Backend, a robust Node.js application built using the Nest.js framework, incorporating the repository pattern for efficient data handling. This backend solution boasts task scheduling with Chron jobs and provides clear API documentation through Swagger.
+
+Features
+Nest.js Framework: Built on the powerful Nest.js framework, Axel Services Backend ensures scalability and maintainability.
+
+Repository Pattern: Adopting the repository pattern enhances code organization and facilitates effective data management.
+
+Task Scheduling with Chron Jobs: Task automation is achieved through Chron jobs, ensuring timely execution of critical operations.
+
+Swagger API Documentation: Easily explore and understand the APIs with Swagger documentation, promoting seamless integration and development.
 
