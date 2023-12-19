@@ -82,8 +82,6 @@ export class UsersService implements IUserService {
         throw new HttpException('Token not available', HttpStatus.UNAUTHORIZED);
       }
     } catch (error) {
-      console.log(error);
-
       if (error instanceof HttpException) {
         return res.status(error.getStatus()).json({
           message: error.message,
@@ -320,9 +318,13 @@ export class UsersService implements IUserService {
       }
     }
   }
-  async bookingsList(res: Response) {
+  async bookingsList(req: Request, res: Response) {
     try {
-      const bookings = await this._userRepository.listBookings();
+      const authHeader = req.headers['authorization'];
+      const token = authHeader.split(' ')[1];
+      const decoded = this._jwtService.verify(token);
+      const userId = decoded.token;
+      const bookings = await this._userRepository.listBookings(userId);
       return res.status(HttpStatus.OK).json({ bookings });
     } catch (error) {
       if (error instanceof HttpException) {

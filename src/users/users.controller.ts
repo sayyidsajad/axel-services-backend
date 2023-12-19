@@ -80,8 +80,8 @@ export class UsersController {
   }
   @Get('bookingsList')
   @UsePipes(new ValidationPipe({ transform: true }))
-  async bookingsList(@Res() res: Response) {
-    return this._userServices.bookingsList(res);
+  async bookingsList(@Req() req: Request, @Res() res: Response) {
+    return this._userServices.bookingsList(req, res);
   }
   @Patch('cancelBooked')
   @UsePipes(new ValidationPipe({ transform: true }))

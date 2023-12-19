@@ -162,8 +162,11 @@ export class UserRepository implements IUserRepository {
     });
     return insertBooking.save();
   }
-  async listBookings(): Promise<BookingDto> {
+  async listBookings(id: string): Promise<BookingDto> {
     return await this._bookingModel.aggregate([
+      {
+        $match: { user: new mongoose.Types.ObjectId(id) },
+      },
       {
         $lookup: {
           from: 'servicers',

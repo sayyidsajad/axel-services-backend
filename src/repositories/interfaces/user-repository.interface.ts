@@ -23,7 +23,7 @@ export interface IUserRepository {
     id: string,
     reducedAmt: number,
   ): Promise<BookingDto>;
-  listBookings(): Promise<BookingDto>;
+  listBookings(id: string): Promise<BookingDto>;
   cancelBooking(id: string, textArea: string): Promise<BookingDto>;
   bookingFindId(id: string): Promise<BookingDto>;
   cancelBookingUpdateOne(

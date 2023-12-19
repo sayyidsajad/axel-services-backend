@@ -338,7 +338,7 @@ export class AdminService implements IAdminService {
   ) {
     try {
       await this._adminRepository.categoryUpdate(id, categoryName, description);
-      return res.status(HttpStatus.ACCEPTED);
+      return res.status(HttpStatus.ACCEPTED).json({ message: 'Success' });
     } catch (error) {
       if (error instanceof HttpException) {
         return res.status(error.getStatus()).json({

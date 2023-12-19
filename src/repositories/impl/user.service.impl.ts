@@ -22,7 +22,7 @@ export interface IUserService {
     place: string,
     walletChewalletChecked: number,
   ): Promise<any>;
-  bookingsList(res: Response): Promise<any>;
+  bookingsList(req: Request, res: Response): Promise<any>;
   cancel(
     req: Request,
     res: Response,
